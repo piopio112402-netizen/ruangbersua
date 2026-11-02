@@ -1,16 +1,412 @@
-const STRIP_TEMPLATES = [
-    {
-        id: 'white-classic',
-        name: 'White Minimal',
-        color: '#ffffff',
-        text: '#111111',
-        type: 'color'
-    },
-    // Tambahkan template PNG custom buatan kamu di sini:
-    {
-        id: 'custom-event-1',
-        name: 'Retro Flower Frame',
-        url: 'https://domainkamu.com/gambar-frame-kamu.png', // Atau lokasi file PNG
-        type: 'image'
-    }
-];
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruang Bersua - Photobox System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bg: '#FAF7F2',
+                            primary: '#2C2A29',
+                            accent: '#D9C5B2',
+                            card: '#FFFFFF',
+                            sage: '#8A9A86'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .flash-overlay {
+            animation: flashAnim 0.4s ease-out;
+        }
+        @keyframes flashAnim {
+            0% { opacity: 1; background-color: white; }
+            100% { opacity: 0; background-color: transparent; }
+        }
+        .filter-normal { filter: none; }
+        .filter-bw { filter: grayscale(100%) contrast(110%); }
+        .filter-warm { filter: sepia(30%) saturate(120%) brightness(102%); }
+        .filter-vintage { filter: sepia(50%) hue-rotate(-10deg) contrast(95%); }
+        .filter-pastel { filter: saturate(85%) brightness(108%) contrast(90%); }
+    </style>
+</head>
+<body class="bg-brand-bg text-brand-primary font-sans min-h-screen flex flex-col justify-between select-none overflow-x-hidden">
+
+    <!-- Header Navigation -->
+    <header class="w-full py-4 px-8 border-b border-stone-200 flex justify-between items-center bg-white/50 backdrop-blur-md sticky top-0 z-40">
+        <div class="flex items-center space-x-2">
+            <span class="text-2xl font-serif font-bold tracking-wider text-brand-primary">Ruang Bersua.</span>
+            <span class="text-xs bg-stone-200 text-stone-600 px-2 py-0.5 rounded-full uppercase tracking-widest font-semibold">Studio</span>
+        </div>
+        <div id="step-indicator" class="hidden text-xs tracking-widest uppercase text-stone-400 font-semibold">
+            Step <span id="current-step-num">1</span> of 4
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 flex items-center justify-center p-4">
+
+        <!-- SCREEN 1: WELCOME SCREEN -->
+        <div id="screen-welcome" class="text-center max-w-xl py-12 px-6 flex flex-col items-center">
+            <div class="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mb-6 shadow-sm border border-stone-200">
+                <svg class="w-10 h-10 text-stone-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M68 9a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V11a2 2 0 00-2-2h-1M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9a3 3 0 116 0 3 3 0 01-6 0z"/>
+                    <circle cx="12" cy="13" r="3"/>
+                </svg>
+            </div>
+            <h1 class="font-serif text-4xl sm:text-5xl mb-4 text-stone-800 tracking-tight">Abadikan Momen Terindaimu</h1>
+            <p class="text-stone-500 mb-8 max-w-md leading-relaxed text-sm sm:text-base">Selamat datang di Ruang Bersua. Klik tombol di bawah untuk memulai sesi photobox kamu.</p>
+            <button onclick="startApp()" class="w-full sm:w-auto px-10 py-4 bg-brand-primary text-white rounded-full font-medium tracking-wide shadow-lg hover:bg-black transition-all transform hover:-translate-y-0.5 active:translate-y-0">
+                Touch to Start / Sentuh untuk Mulai
+            </button>
+        </div>
+
+        <!-- SCREEN 2: TEMPLATE SELECTION & CAMERA PREVIEW -->
+        <div id="screen-setup" class="hidden w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+            <!-- Left: Camera Preview (Live) -->
+            <div class="md:col-span-7 bg-white p-4 rounded-2xl shadow-sm border border-stone-200 flex flex-col items-center">
+                <div class="relative w-full aspect-[3/4] bg-stone-900 rounded-xl overflow-hidden shadow-inner flex items-center justify-center">
+                    <video id="webcam" autoplay playsinline class="w-full h-full object-cover -scale-x-100"></video>
+                    <canvas id="photo-canvas" class="hidden"></canvas>
+                    <div id="flash" class="absolute inset-0 pointer-events-none z-30"></div>
+                    <div id="countdown-overlay" class="hidden absolute inset-0 bg-black/40 backdrop-blur-sm z-20 flex items-center justify-center">
+                        <span id="countdown-text" class="text-9xl font-bold text-white font-serif animate-ping">3</span>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center justify-between w-full text-xs text-stone-400 font-medium">
+                    <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block mr-2 animate-pulse"></span> Camera Ready</span>
+                    <span>Pose 4x Strip</span>
+                </div>
+            </div>
+
+            <!-- Right: Select Template & Start -->
+            <div class="md:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col justify-between h-full">
+                <div>
+                    <h2 class="text-xl font-serif font-bold text-stone-800 mb-1">Pilih Frame Template</h2>
+                    <p class="text-xs text-stone-500 mb-4">Pilih warna atau upload template gambar custom sendiri.</p>
+
+                    <!-- Template Options -->
+                    <div class="space-y-3 mb-6" id="template-options">
+                        <label class="flex items-center p-3 border-2 border-brand-primary rounded-xl cursor-pointer transition-all bg-stone-50">
+                            <input type="radio" name="template" value="white" checked onchange="selectTemplate('white')" class="accent-stone-800">
+                            <div class="ml-3 flex items-center space-x-3">
+                                <div class="w-6 h-8 bg-white border border-stone-300 rounded"></div>
+                                <span class="text-sm font-medium text-stone-700">Polos Minimalis (Putih Standard)</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center p-3 border-2 border-stone-200 hover:border-stone-400 rounded-xl cursor-pointer transition-all">
+                            <input type="radio" name="template" value="black" onchange="selectTemplate('black')" class="accent-stone-800">
+                            <div class="ml-3 flex items-center space-x-3">
+                                <div class="w-6 h-8 bg-stone-900 border border-stone-700 rounded"></div>
+                                <span class="text-sm font-medium text-stone-700">Matte Black</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center p-3 border-2 border-stone-200 hover:border-stone-400 rounded-xl cursor-pointer transition-all">
+                            <input type="radio" name="template" value="cream" onchange="selectTemplate('cream')" class="accent-stone-800">
+                            <div class="ml-3 flex items-center space-x-3">
+                                <div class="w-6 h-8 bg-[#F5EBE6] border border-stone-300 rounded"></div>
+                                <span class="text-sm font-medium text-stone-700">Pastel Cream</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Upload Custom Frame (For Owner/Admin) -->
+                    <div class="pt-4 border-t border-stone-100">
+                        <label class="block text-xs font-semibold text-stone-600 mb-2">Upload Custom PNG Frame (Opsional)</label>
+                        <input type="file" id="custom-frame-input" accept="image/png" onchange="handleCustomFrame(event)" class="block w-full text-xs text-stone-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer"/>
+                    </div>
+                </div>
+
+                <button id="btn-start-shoot" onclick="startPhotoSession()" class="w-full mt-6 py-4 bg-brand-primary text-white rounded-xl font-medium tracking-wide shadow-md hover:bg-black transition-all">
+                    Mulai Foto (4 Pose)
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: EDIT TONE & PREVIEW -->
+        <div id="screen-edit" class="hidden w-full max-w-4xl flex flex-col md:flex-row items-center gap-8">
+            <!-- Strip Result Preview -->
+            <div class="flex-1 flex justify-center">
+                <div class="bg-stone-800 p-3 rounded-xl shadow-2xl">
+                    <canvas id="final-strip-canvas" class="max-h-[70vh] w-auto rounded border border-stone-700"></canvas>
+                </div>
+            </div>
+
+            <!-- Tone Control Panel -->
+            <div class="w-full md:w-80 bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-xl font-serif font-bold text-stone-800 mb-1">Pilih Filter Tone</h2>
+                    <p class="text-xs text-stone-500 mb-4">Sesuaikan nuansa warna hasil foto kamu.</p>
+
+                    <div class="grid grid-cols-2 gap-2 mb-6">
+                        <button onclick="applyFilter('normal')" class="p-3 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:border-stone-800 focus:bg-stone-50">Normal</button>
+                        <button onclick="applyFilter('bw')" class="p-3 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:border-stone-800 focus:bg-stone-50">Monochrome</button>
+                        <button onclick="applyFilter('warm')" class="p-3 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:border-stone-800 focus:bg-stone-50">Soft Warm</button>
+                        <button onclick="applyFilter('vintage')" class="p-3 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:border-stone-800 focus:bg-stone-50">Vintage Film</button>
+                    </div>
+                </div>
+
+                <button onclick="finishSession()" class="w-full py-4 bg-brand-primary text-white rounded-xl font-medium shadow-md hover:bg-black transition-all">
+                    Selesai & Cetak Foto
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 4: PRINT & SCAN QR -->
+        <div id="screen-finish" class="hidden text-center max-w-lg bg-white p-8 rounded-2xl shadow-sm border border-stone-200 flex flex-col items-center">
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-serif font-bold text-stone-800 mb-2">Foto Berhasil Dibuat!</h2>
+            <p class="text-stone-500 text-sm mb-6">Silakan unduh file digital atau cetak foto kamu di bawah ini.</p>
+
+            <!-- QR Code Placeholder -->
+            <div class="p-4 bg-stone-50 border border-stone-200 rounded-xl mb-6 flex flex-col items-center">
+                <img id="qr-code-img" src="" alt="Scan QR Code" class="w-40 h-40 mb-2">
+                <span class="text-xs text-stone-400 font-medium">Scan QR ini untuk simpan di HP</span>
+            </div>
+
+            <div class="flex gap-3 w-full">
+                <button onclick="downloadStrip()" class="flex-1 py-3 px-4 bg-stone-100 hover:bg-stone-200 text-stone-800 font-medium text-sm rounded-xl transition-all">
+                    Unduh PNG
+                </button>
+                <button onclick="resetApp()" class="flex-1 py-3 px-4 bg-brand-primary hover:bg-black text-white font-medium text-sm rounded-xl transition-all">
+                    Sesi Baru
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full py-4 text-center text-xs text-stone-400 border-t border-stone-200/50">
+        &copy; 2026 Ruang Bersua Photobox. All rights reserved.
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // State Management
+        let videoStream = null;
+        let capturedPhotos = [];
+        let selectedTemplateColor = '#FFFFFF';
+        let customFrameImage = null;
+        let selectedFilter = 'normal';
+
+        const video = document.getElementById('webcam');
+        const photoCanvas = document.getElementById('photo-canvas');
+        const finalCanvas = document.getElementById('final-strip-canvas');
+
+        // Navigation Steps
+        function setStep(stepNum) {
+            document.getElementById('step-indicator').classList.remove('hidden');
+            document.getElementById('current-step-num').innerText = stepNum;
+        }
+
+        async function startApp() {
+            document.getElementById('screen-welcome').classList.add('hidden');
+            document.getElementById('screen-setup').classList.remove('hidden');
+            setStep(1);
+            await initCamera();
+        }
+
+        // Initialize Camera Feed
+        async function initCamera() {
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: { ideal: 1280 }, height: { ideal: 960 }, facingMode: "user" },
+                    audio: false
+                });
+                video.srcObject = videoStream;
+            } catch (err) {
+                alert("Gagal mengakses kamera. Pastikan izin kamera telah diberikan di browser.");
+            }
+        }
+
+        function selectTemplate(type) {
+            customFrameImage = null;
+            if (type === 'white') selectedTemplateColor = '#FFFFFF';
+            if (type === 'black') selectedTemplateColor = '#111111';
+            if (type === 'cream') selectedTemplateColor = '#F5EBE6';
+        }
+
+        function handleCustomFrame(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        customFrameImage = img;
+                    }
+                    img.src = event.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Auto Photo Session (4 Poses)
+        async function startPhotoSession() {
+            capturedPhotos = [];
+            document.getElementById('btn-start-shoot').disabled = true;
+            document.getElementById('btn-start-shoot').innerText = "Sedang Mengambil Foto...";
+
+            for (let i = 0; i < 4; i++) {
+                await runCountdown(3);
+                triggerFlash();
+                captureSinglePhoto();
+                await new Promise(r => setTimeout(r, 1000));
+            }
+
+            document.getElementById('screen-setup').classList.add('hidden');
+            document.getElementById('screen-edit').classList.remove('hidden');
+            setStep(2);
+            renderStrip();
+        }
+
+        function runCountdown(seconds) {
+            return new Promise((resolve) => {
+                const overlay = document.getElementById('countdown-overlay');
+                const text = document.getElementById('countdown-text');
+                overlay.classList.remove('hidden');
+                let count = seconds;
+                text.innerText = count;
+
+                const timer = setInterval(() => {
+                    count--;
+                    if (count > 0) {
+                        text.innerText = count;
+                    } else {
+                        clearInterval(timer);
+                        overlay.classList.add('hidden');
+                        resolve();
+                    }
+                }, 1000);
+            });
+        }
+
+        function triggerFlash() {
+            const flash = document.getElementById('flash');
+            flash.classList.add('flash-overlay');
+            setTimeout(() => flash.classList.remove('flash-overlay'), 400);
+        }
+
+        function captureSinglePhoto() {
+            const ctx = photoCanvas.getContext('2d');
+            photoCanvas.width = video.videoWidth;
+            photoCanvas.height = video.videoHeight;
+            
+            // Mirror image horizontally for photobox natural feel
+            ctx.translate(photoCanvas.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(video, 0, 0, photoCanvas.width, photoCanvas.height);
+            
+            capturedPhotos.push(photoCanvas.toDataURL('image/png'));
+        }
+
+        function applyFilter(filterName) {
+            selectedFilter = filterName;
+            renderStrip();
+        }
+
+        // Render Final Photo Strip Canvas
+        function renderStrip() {
+            const ctx = finalCanvas.getContext('2d');
+            
+            // High-Res Strip Dimensions (Standard 2x6 inches layout ratio)
+            const stripWidth = 600;
+            const stripHeight = 1800;
+            finalCanvas.width = stripWidth;
+            finalCanvas.height = stripHeight;
+
+            // Fill Background Frame
+            ctx.fillStyle = selectedTemplateColor;
+            ctx.fillRect(0, 0, stripWidth, stripHeight);
+
+            const padding = 40;
+            const photoW = stripWidth - (padding * 2);
+            const photoH = 340;
+            const gap = 30;
+            let startY = 60;
+
+            // Render 4 Photos onto Strip
+            capturedPhotos.forEach((src, idx) => {
+                const img = new Image();
+                img.onload = () => {
+                    ctx.save();
+                    
+                    // Apply Selected Tone Filter
+                    if (selectedFilter === 'bw') ctx.filter = 'grayscale(100%) contrast(110%)';
+                    if (selectedFilter === 'warm') ctx.filter = 'sepia(30%) saturate(120%)';
+                    if (selectedFilter === 'vintage') ctx.filter = 'sepia(50%) hue-rotate(-10deg)';
+
+                    ctx.drawImage(img, padding, startY + (idx * (photoH + gap)), photoW, photoH);
+                    ctx.restore();
+
+                    // Render Logo Watermark at Bottom when done
+                    if (idx === 3) {
+                        if (customFrameImage) {
+                            ctx.drawImage(customFrameImage, 0, 0, stripWidth, stripHeight);
+                        } else {
+                            renderWatermark(ctx, stripWidth, stripHeight);
+                        }
+                    }
+                };
+                img.src = src;
+            });
+        }
+
+        function renderWatermark(ctx, w, h) {
+            ctx.fillStyle = selectedTemplateColor === '#FFFFFF' || selectedTemplateColor === '#F5EBE6' ? '#2C2A29' : '#FFFFFF';
+            ctx.font = 'bold 28px Playfair Display';
+            ctx.textAlign = 'center';
+            ctx.fillText('Ruang Bersua.', w / 2, h - 70);
+
+            ctx.font = '14px Plus Jakarta Sans';
+            ctx.fillStyle = selectedTemplateColor === '#FFFFFF' || selectedTemplateColor === '#F5EBE6' ? '#888888' : '#AAAAAA';
+            const today = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
+            ctx.fillText(today, w / 2, h - 45);
+        }
+
+        function finishSession() {
+            document.getElementById('screen-edit').classList.add('hidden');
+            document.getElementById('screen-finish').classList.remove('hidden');
+            setStep(3);
+
+            // Generate Dynamic QR Code Simulator
+            const dataUrl = finalCanvas.toDataURL('image/png');
+            const qrImg = document.getElementById('qr-code-img');
+            qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.href)}`;
+        }
+
+        function downloadStrip() {
+            const link = document.createElement('a');
+            link.download = `RuangBersua_${Date.now()}.png`;
+            link.href = finalCanvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function resetApp() {
+            document.getElementById('screen-finish').classList.add('hidden');
+            document.getElementById('screen-welcome').classList.remove('hidden');
+            document.getElementById('step-indicator').classList.add('hidden');
+            document.getElementById('btn-start-shoot').disabled = false;
+            document.getElementById('btn-start-shoot').innerText = "Mulai Foto (4 Pose)";
+        }
+    </script>
+</body>
+</html>
