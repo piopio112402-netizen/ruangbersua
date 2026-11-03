@@ -44,7 +44,7 @@
             <span class="text-2xl font-serif font-bold tracking-wider text-brand-primary">Ruang Bersua.</span>
             <span class="text-xs bg-stone-200 text-stone-600 px-2 py-0.5 rounded-full uppercase tracking-widest font-semibold">Studio</span>
         </div>
-        <!-- Admin Access Button -->
+        <!-- Secret Admin Access -->
         <button onclick="toggleAdminModal()" class="text-xs text-stone-400 hover:text-stone-700 flex items-center gap-1 transition-all">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
@@ -63,7 +63,7 @@
 
             <div id="admin-login-step">
                 <p class="text-xs text-stone-500 mb-3">Masukkan kata sandi admin untuk mengunggah template frame baru.</p>
-                <input type="password" id="admin-pass-input" placeholder="Kata sandi (default: 1234)" class="w-full p-2.5 border border-stone-300 rounded-xl text-xs mb-3 outline-none focus:ring-1 focus:ring-stone-800"/>
+                <input type="password" id="admin-pass-input" placeholder="Kata sandi admin (123456)" class="w-full p-2.5 border border-stone-300 rounded-xl text-xs mb-3 outline-none focus:ring-1 focus:ring-stone-800"/>
                 <button onclick="checkAdminPass()" class="w-full py-2.5 bg-stone-800 text-white text-xs rounded-xl font-medium hover:bg-black transition-all">Masuk</button>
             </div>
 
@@ -112,7 +112,7 @@
                         <button onclick="setGridCount(4, this)" class="grid-btn p-2 border-2 border-brand-primary bg-stone-50 rounded-xl text-xs font-semibold text-stone-800">4 Pose</button>
                     </div>
 
-                    <!-- 2. Frame Selector (Customer Only Selects Here) -->
+                    <!-- 2. Frame Selector -->
                     <label class="block text-xs font-semibold text-stone-700 mb-2">2. Pilih Warna / Frame Template</label>
                     <div class="space-y-2 mb-4 max-h-52 overflow-y-auto pr-1" id="template-options">
                         <label class="flex items-center p-2.5 border-2 border-brand-primary bg-stone-50 rounded-xl cursor-pointer">
@@ -187,13 +187,12 @@
             <h2 class="text-2xl font-serif font-bold text-stone-800 mb-1">Hasil Foto Siap!</h2>
             <p class="text-stone-500 text-xs mb-4">Pilih pengiriman foto atau tampilkan Barcode QR untuk HP kamu.</p>
 
-            <!-- Barcode Section (Generated On Demand) -->
+            <!-- Barcode Section -->
             <div class="p-4 bg-stone-50 border border-stone-200 rounded-xl mb-4 flex flex-col items-center w-full">
-                <div id="barcode-placeholder" class="py-4 text-center">
-                    <button onclick="generateInstantBarcode()" class="px-4 py-2 bg-stone-800 text-white text-xs font-medium rounded-xl hover:bg-black transition-all shadow-sm">
+                <div id="barcode-placeholder" class="py-2 text-center">
+                    <button onclick="generateInstantBarcode()" class="px-4 py-2.5 bg-stone-800 text-white text-xs font-medium rounded-xl hover:bg-black transition-all shadow-sm">
                         Tampilkan Barcode Foto
                     </button>
-                    <p class="text-[10px] text-stone-400 mt-2">Barcode berisi hasil foto mentah & strip utuh</p>
                 </div>
                 <div id="qrcode-box" class="hidden w-44 h-44 bg-white p-2 rounded flex items-center justify-center shadow-inner"></div>
                 <span id="barcode-scan-hint" class="hidden text-[11px] text-stone-500 font-medium mt-2">Scan QR via Kamera HP</span>
@@ -257,7 +256,7 @@
             }
         }
 
-        // Admin Modal Controls
+        // Admin Controls
         function toggleAdminModal() {
             const modal = document.getElementById('admin-modal');
             modal.classList.toggle('hidden');
@@ -265,7 +264,7 @@
 
         function checkAdminPass() {
             const pass = document.getElementById('admin-pass-input').value;
-            if (pass === '1234') {
+            if (pass === '123456') {
                 document.getElementById('admin-login-step').classList.add('hidden');
                 document.getElementById('admin-upload-step').classList.remove('hidden');
             } else {
@@ -300,7 +299,7 @@
                             highlightTemplateLabel(radio);
                         });
 
-                        alert("Template Frame berhasil ditambahkan ke daftar customer!");
+                        alert("Template Frame berhasil ditambahkan ke pilihan customer!");
                     }
                     img.src = event.target.result;
                 }
@@ -465,6 +464,7 @@
             document.getElementById('screen-finish').classList.remove('hidden');
         }
 
+        // Instant Barcode Generation without loading freezes
         function generateInstantBarcode() {
             const qrContainer = document.getElementById('qrcode-box');
             qrContainer.innerHTML = '';
