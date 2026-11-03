@@ -48,7 +48,7 @@
         .draggable-box {
             position: absolute;
             border: 2px dashed #ef4444;
-            background: rgba(239, 68, 68, 0.2);
+            background: rgba(239, 68, 68, 0.25);
             cursor: move;
             resize: both;
             overflow: hidden;
@@ -96,14 +96,14 @@
                 </div>
                 
                 <div>
-                    <label class="block text-xs font-semibold text-stone-700 mb-1">1. Upload File Frame (PNG/JPG):</label>
+                    <label class="block text-xs font-semibold text-stone-700 mb-1">1. Upload File Frame Canva (PNG Transparan):</label>
                     <input type="file" id="custom-frame-input" accept="image/*" onchange="previewAdminFrame(event)" class="block w-full text-xs text-stone-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-700 cursor-pointer"/>
                 </div>
 
                 <!-- Editor Geser Kotak Foto Frame -->
                 <div id="frame-editor-container" class="hidden border rounded-xl p-3 bg-stone-50">
-                    <label class="block text-xs font-semibold text-stone-700 mb-2">2. Geser / Atur Ukuran Kotak Foto (Merah):</label>
-                    <div id="editor-canvas-wrapper" class="relative w-full max-w-[280px] mx-auto border bg-white overflow-hidden rounded shadow-sm">
+                    <label class="block text-xs font-semibold text-stone-700 mb-2">2. Geser / Sesuaikan 4 Kotak Merah Tempat Foto:</label>
+                    <div id="editor-canvas-wrapper" class="relative w-full max-w-[240px] mx-auto border bg-white overflow-hidden rounded shadow-sm">
                         <img id="editor-frame-img" src="" class="w-full h-auto block select-none pointer-events-none"/>
                         <!-- 4 Interactive Boxes -->
                         <div id="box-0" class="draggable-box" style="top: 10%; left: 8%; width: 84%; height: 18%;"></div>
@@ -111,13 +111,12 @@
                         <div id="box-2" class="draggable-box" style="top: 52%; left: 8%; width: 84%; height: 18%;"></div>
                         <div id="box-3" class="draggable-box" style="top: 73%; left: 8%; width: 84%; height: 18%;"></div>
                     </div>
-                    <span class="text-[10px] text-stone-400 block text-center mt-2">Geser kotak merah sesuai posisi kolom foto di bingkai Canva kamu.</span>
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-stone-700 mb-1">Status Cetak Otomatis (Printer):</label>
                     <select id="auto-print-setting" class="w-full p-2 border border-stone-300 rounded-xl text-xs outline-none">
-                        <option value="true" selected>Aktif (Otomatis Cetak di Latar Belakang)</option>
+                        <option value="true" selected>Aktif (Otomatis Cetak Latar Belakang)</option>
                         <option value="false">Nonaktif (Hanya Digital)</option>
                     </select>
                 </div>
@@ -217,12 +216,12 @@
         <!-- SCREEN 3: FINISH (PREVIEW CETAK + EDIT WARNA + BARCODE REAL-TIME + EMAIL) -->
         <div id="screen-finish" class="hidden w-full max-w-5xl flex flex-col md:flex-row items-center gap-8">
             <div class="flex-1 flex flex-col items-center">
-                <div class="bg-stone-800 p-3 rounded-2xl shadow-2xl relative mb-3">
-                    <canvas id="final-strip-canvas" class="max-h-[60vh] w-auto rounded border border-stone-700"></canvas>
+                <div class="p-2 bg-stone-800/10 rounded-2xl border border-stone-200 shadow-xl relative mb-3">
+                    <canvas id="final-strip-canvas" class="max-h-[65vh] w-auto rounded"></canvas>
                 </div>
                 
                 <div class="bg-white p-3 rounded-xl border border-stone-200 shadow-sm w-full max-w-xs text-center">
-                    <label class="block text-[11px] font-semibold text-stone-600 mb-1.5">Pilih Filter Warna Cetak:</label>
+                    <label class="block text-[11px] font-semibold text-stone-600 mb-1.5">Pilih Filter Warna Foto:</label>
                     <div class="grid grid-cols-4 gap-1">
                         <button onclick="applyFilter('normal')" class="py-1.5 border border-stone-200 rounded-lg text-[10px] font-medium hover:border-stone-800 focus:bg-stone-100">Normal</button>
                         <button onclick="applyFilter('bw')" class="py-1.5 border border-stone-200 rounded-lg text-[10px] font-medium hover:border-stone-800 focus:bg-stone-100">B&W</button>
@@ -254,7 +253,7 @@
                             Kirim
                         </button>
                     </div>
-                    <span id="email-status-text" class="text-[10px] text-emerald-600 hidden block">✓ Mengirim salinan dari piopio112402@gmail.com...</span>
+                    <span id="email-status-text" class="text-[10px] text-emerald-600 hidden block">✓ Mengirim salinan foto...</span>
                 </div>
 
                 <button onclick="resetApp()" class="w-full py-3.5 bg-brand-primary hover:bg-black text-white font-medium text-xs rounded-xl tracking-wider uppercase transition-all shadow-md">
@@ -282,12 +281,11 @@
         let retakeTimer = null;
         let retakeTimeLeft = 60;
 
-        // Custom Layout Settings dari Admin (Nilai Default)
         let customBoxCoords = [
-            { y: 0.10, x: 0.08, w: 0.84, h: 0.18 },
-            { y: 0.31, x: 0.08, w: 0.84, h: 0.18 },
-            { y: 0.52, x: 0.08, w: 0.84, h: 0.18 },
-            { y: 0.73, x: 0.08, w: 0.84, h: 0.18 }
+            { y: 0.08, x: 0.08, w: 0.84, h: 0.19 },
+            { y: 0.29, x: 0.08, w: 0.84, h: 0.19 },
+            { y: 0.50, x: 0.08, w: 0.84, h: 0.19 },
+            { y: 0.71, x: 0.08, w: 0.84, h: 0.19 }
         ];
 
         const video = document.getElementById('webcam');
@@ -372,7 +370,7 @@
         function saveAdminFrameConfig() {
             const img = document.getElementById('editor-frame-img');
             if(!img.src) {
-                alert("Pengaturan admin berhasil disimpan!");
+                alert("Pengaturan admin disimpan!");
                 toggleAdminModal();
                 return;
             }
@@ -381,7 +379,6 @@
             const wrapperW = wrapper.clientWidth;
             const wrapperH = wrapper.clientHeight;
 
-            // Hitung koordinat persentase posisi dari editor geser admin
             for(let i=0; i<4; i++) {
                 const el = document.getElementById(`box-${i}`);
                 customBoxCoords[i] = {
@@ -413,7 +410,7 @@
                     customFrameImage = frameImg;
                 });
 
-                alert("Frame Custom & Posisi Kotak Foto Berhasil Disimpan!");
+                alert("Frame Custom Berhasil Disimpan!");
                 toggleAdminModal();
             };
             frameImg.src = img.src;
@@ -604,10 +601,12 @@
             finalCanvas.width = stripWidth;
             finalCanvas.height = stripHeight;
 
+            // LAYER 1 (PALING BELAKANG): Warna Dasar Canvas
             ctx.fillStyle = selectedTemplateColor;
             ctx.fillRect(0, 0, stripWidth, stripHeight);
 
-            // Render Foto Berdasarkan Koordinat Hasil Atur Admin
+            // LAYER 2 (TENGAH): Foto-foto Customer
+            let loadedCount = 0;
             capturedPhotos.forEach((src, idx) => {
                 const img = new Image();
                 img.onload = () => {
@@ -618,8 +617,10 @@
                     const ph = coord.h * stripHeight;
 
                     drawRoundedImage(ctx, img, px, py, pw, ph, 16);
+                    loadedCount++;
 
-                    if (idx === capturedPhotos.length - 1) {
+                    // LAYER 3 (PALING DEPAN): Ditimpa Frame Canva Custom
+                    if (loadedCount === capturedPhotos.length) {
                         if (customFrameImage) {
                             ctx.drawImage(customFrameImage, 0, 0, stripWidth, stripHeight);
                         } else {
@@ -651,16 +652,16 @@
             renderStrip();
 
             setTimeout(() => {
-                const finalImageSrc = finalCanvas.toDataURL('image/png');
+                const finalImageSrc = finalCanvas.toDataURL('image/jpeg', 0.85);
 
-                // Cetak Latar Belakang (Hidden Print Tanpa Ditampilkan Tombol ke Pengunjung)
+                // Cetak Latar Belakang (Hidden Print)
                 const autoPrint = document.getElementById('auto-print-setting').value;
                 if (autoPrint === 'true') {
                     document.getElementById('print-image-target').src = finalImageSrc;
                     setTimeout(() => { window.print(); }, 300);
                 }
 
-                // Barcode Instan Kompatibel Kamera HP (Android & iOS)
+                // Barcode Instan Ringan (Bisa Discan HP)
                 const qrContainer = document.getElementById('qrcode-box');
                 qrContainer.innerHTML = '';
                 new QRCode(qrContainer, {
@@ -671,7 +672,7 @@
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.L
                 });
-            }, 500);
+            }, 600);
         }
 
         function sendEmailBackup() {
@@ -697,7 +698,7 @@
 
             emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", emailParams)
                 .then(() => {
-                    statusText.innerText = `✓ Foto strip dikirim dari piopio112402@gmail.com ke ${email}`;
+                    statusText.innerText = `✓ Foto dikirim dari piopio112402@gmail.com ke ${email}`;
                     btnSend.disabled = false;
                 }, (error) => {
                     statusText.innerText = `✓ Foto dikirim ke ${email} & disimpan ke piopio112402@gmail.com`;
