@@ -43,7 +43,7 @@
 </head>
 <body class="bg-brand-bg text-brand-primary font-sans min-h-screen flex flex-col justify-between select-none overflow-x-hidden">
 
-    <!-- Area Tersembunyi Khusus Cetak Printer Studio -->
+    <!-- Area Khusus Printer (Hidden) -->
     <div id="print-area" class="hidden">
         <img id="print-image-target" src="" class="w-full h-auto" />
     </div>
@@ -52,6 +52,7 @@
     <header class="w-full py-4 px-8 border-b border-stone-200 flex justify-between items-center bg-white/60 backdrop-blur-md sticky top-0 z-40">
         <div class="flex items-center space-x-2">
             <span class="text-2xl font-serif font-bold tracking-wider text-brand-primary">Ruang Bersua.</span>
+            <span class="text-xs bg-stone-200 text-stone-600 px-2 py-0.5 rounded-full uppercase tracking-widest font-semibold">Studio</span>
         </div>
         <!-- Secret Admin Access -->
         <button onclick="toggleAdminModal()" class="text-xs text-stone-400 hover:text-stone-700 flex items-center gap-1 transition-all px-3 py-1.5 rounded-lg border border-stone-200 hover:border-stone-400">
@@ -62,38 +63,36 @@
         </button>
     </header>
 
-    <!-- Modal Admin Panel -->
+    <!-- Modal Secret Admin Panel -->
     <div id="admin-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-stone-200">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-serif font-bold text-lg text-stone-800">Panel Operator Admin</h3>
+                <h3 class="font-serif font-bold text-lg text-stone-800">Pengaturan Admin Studio</h3>
                 <button onclick="toggleAdminModal()" class="text-stone-400 hover:text-stone-600 text-sm">✕</button>
             </div>
 
             <div id="admin-login-step">
-                <p class="text-xs text-stone-500 mb-3">Masukkan kata sandi admin (123456).</p>
-                <input type="password" id="admin-pass-input" placeholder="Kata Sandi Admin" class="w-full p-2.5 border border-stone-300 rounded-xl text-xs mb-3 outline-none focus:ring-1 focus:ring-stone-800"/>
+                <p class="text-xs text-stone-500 mb-3">Masukkan kata sandi admin untuk mengelola printer & template.</p>
+                <input type="password" id="admin-pass-input" placeholder="Kata Sandi Admin (123456)" class="w-full p-2.5 border border-stone-300 rounded-xl text-xs mb-3 outline-none focus:ring-1 focus:ring-stone-800"/>
                 <button onclick="checkAdminPass()" class="w-full py-2.5 bg-stone-800 text-white text-xs rounded-xl font-medium hover:bg-black transition-all">Masuk Admin</button>
             </div>
 
             <div id="admin-upload-step" class="hidden space-y-4">
                 <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-                    <span class="text-xs text-emerald-700 font-semibold block">✓ Status Admin: Aktif</span>
+                    <span class="text-xs text-emerald-700 font-semibold block">✓ Admin Mode Aktif</span>
                 </div>
                 
-                <!-- Upload Custom Frame -->
                 <div>
                     <label class="block text-xs font-semibold text-stone-700 mb-1">Upload Frame PNG Custom Baru:</label>
                     <input type="file" id="custom-frame-input" accept="image/png" onchange="handleAdminCustomFrame(event)" class="block w-full text-xs text-stone-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-700 cursor-pointer"/>
                 </div>
 
-                <!-- Print Copies Setting -->
                 <div>
-                    <label class="block text-xs font-semibold text-stone-700 mb-1">Jumlah Lembar Cetak Otomatis:</label>
+                    <label class="block text-xs font-semibold text-stone-700 mb-1">Jumlah Lembar Cetak Otomatis (Print Copies):</label>
                     <select id="print-copies-select" class="w-full p-2 border border-stone-300 rounded-xl text-xs outline-none">
-                        <option value="1">1 Lembar Strip</option>
-                        <option value="2" selected>2 Lembar Strip (Standard Pairs)</option>
-                        <option value="4">4 Lembar Strip</option>
+                        <option value="1">1 Salinan</option>
+                        <option value="2" selected>2 Salinan (Standard Strip)</option>
+                        <option value="4">4 Salinan</option>
                     </select>
                 </div>
 
@@ -105,17 +104,17 @@
     <!-- Main Container -->
     <main class="flex-1 flex items-center justify-center p-4">
 
-        <!-- SCREEN 1: DEPAN (CLEAN WELCOME) -->
+        <!-- SCREEN 0: LANDING PAGE MINIMALIS -->
         <div id="screen-welcome" class="text-center max-w-md py-12 px-6 flex flex-col items-center">
-            <h1 class="font-serif text-5xl sm:text-6xl mb-8 text-stone-800 tracking-tight font-bold">Ruang Bersua.</h1>
-            <button onclick="startApp()" class="px-12 py-4 bg-brand-primary text-white rounded-full font-medium tracking-wide shadow-lg hover:bg-black transition-all transform hover:-translate-y-0.5 active:translate-y-0">
-                Mulai
+            <h1 class="font-serif text-5xl sm:text-6xl mb-6 text-stone-800 tracking-tight">Ruang Bersua.</h1>
+            <p class="text-stone-400 mb-8 text-xs tracking-widest uppercase font-semibold">Self-Service Photobox Studio</p>
+            <button onclick="goToSetup()" class="w-full py-4 bg-brand-primary text-white rounded-full font-medium text-sm tracking-wider shadow-lg hover:bg-black transition-all transform hover:-translate-y-0.5">
+                MULAI
             </button>
         </div>
 
-        <!-- SCREEN 2: UTAMA (PILIH GRID & FRAME) -->
+        <!-- SCREEN 1: PILIH GRID & FRAME -->
         <div id="screen-setup" class="hidden w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-            <!-- Left: Live Camera Stream -->
             <div class="md:col-span-7 bg-white p-4 rounded-2xl shadow-sm border border-stone-200 flex flex-col items-center">
                 <div class="relative w-full aspect-[3/4] bg-stone-900 rounded-xl overflow-hidden shadow-inner flex items-center justify-center">
                     <video id="webcam" autoplay playsinline class="w-full h-full object-cover -scale-x-100"></video>
@@ -125,27 +124,20 @@
                         <span id="countdown-text" class="text-9xl font-bold text-white font-serif animate-ping">3</span>
                     </div>
                 </div>
-                <div class="mt-4 flex items-center justify-between w-full text-xs text-stone-400 font-medium">
-                    <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block mr-2 animate-pulse"></span> Kamera Siap</span>
-                    <span id="pose-indicator-text">Target: 4 Pose Strip</span>
-                </div>
             </div>
 
-            <!-- Right: Setup Panel -->
             <div class="md:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col justify-between h-full space-y-4">
                 <div>
-                    <h2 class="text-xl font-serif font-bold text-stone-800 mb-1">Pilihan Photobox</h2>
-                    <p class="text-xs text-stone-500 mb-4">Pilih jumlah pose & warna frame pilihanmu.</p>
+                    <h2 class="text-xl font-serif font-bold text-stone-800 mb-1">Pilihan Sesi</h2>
+                    <p class="text-xs text-stone-500 mb-4">Pilih grid foto & warna frame pilihanmu.</p>
 
-                    <!-- 1. Grid Count Selector -->
-                    <label class="block text-xs font-semibold text-stone-700 mb-2">1. Pilih Grid Pose</label>
+                    <label class="block text-xs font-semibold text-stone-700 mb-2">1. Jumlah Grid Pose</label>
                     <div class="grid grid-cols-3 gap-2 mb-4">
                         <button onclick="setGridCount(2, this)" class="grid-btn p-2.5 border-2 border-stone-200 rounded-xl text-xs font-semibold text-stone-700 hover:border-stone-800">2 Pose</button>
                         <button onclick="setGridCount(3, this)" class="grid-btn p-2.5 border-2 border-stone-200 rounded-xl text-xs font-semibold text-stone-700 hover:border-stone-800">3 Pose</button>
                         <button onclick="setGridCount(4, this)" class="grid-btn p-2.5 border-2 border-brand-primary bg-stone-50 rounded-xl text-xs font-semibold text-stone-800">4 Pose</button>
                     </div>
 
-                    <!-- 2. Frame Selector -->
                     <label class="block text-xs font-semibold text-stone-700 mb-2">2. Pilih Frame Template</label>
                     <div class="space-y-2 mb-4 max-h-52 overflow-y-auto pr-1" id="template-options">
                         <label class="flex items-center p-2.5 border-2 border-brand-primary bg-stone-50 rounded-xl cursor-pointer">
@@ -178,46 +170,38 @@
             </div>
         </div>
 
-        <!-- SCREEN 3: EDIT TONE & RETAKE WITH TIMER -->
-        <div id="screen-edit" class="hidden w-full max-w-4xl flex flex-col md:flex-row items-center gap-8">
-            <!-- Canvas Preview -->
-            <div class="flex-1 flex justify-center">
-                <div class="bg-stone-800 p-3 rounded-xl shadow-2xl">
-                    <canvas id="final-strip-canvas" class="max-h-[70vh] w-auto rounded border border-stone-700"></canvas>
+        <!-- SCREEN 2: RETAKE INDIVIDUAL & EDIT TONE -->
+        <div id="screen-edit" class="hidden w-full max-w-5xl flex flex-col md:flex-row items-center gap-8">
+            <!-- Grid Preview With Retake Overlay Buttons -->
+            <div class="flex-1 flex flex-col items-center">
+                <div class="mb-2 flex justify-between w-full max-w-sm text-xs text-stone-500 font-medium">
+                    <span>Klik 🔄 pada foto jika ingin foto ulang</span>
+                    <span id="retake-timer-text" class="text-amber-600 font-semibold">Sisa Waktu: 60s</span>
+                </div>
+                
+                <div id="individual-photos-grid" class="grid grid-cols-2 gap-3 bg-white p-4 rounded-2xl border border-stone-200 shadow-sm max-w-md w-full">
+                    <!-- Dynamic photo boxes with individual retake button inserted here -->
                 </div>
             </div>
 
-            <!-- Edit Controls -->
+            <!-- Tone & Custom Name Controls -->
             <div class="w-full md:w-80 bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col justify-between space-y-4">
                 <div>
-                    <!-- Retake Timer Warning -->
-                    <div class="flex justify-between items-center mb-3 p-2.5 bg-amber-50 border border-amber-200 rounded-xl">
-                        <span class="text-xs text-amber-800 font-medium">Sisa Waktu Edit:</span>
-                        <span id="edit-timer-display" class="text-xs font-bold text-amber-900 font-mono">60s</span>
-                    </div>
-
                     <h2 class="text-xl font-serif font-bold text-stone-800 mb-1">Kustomisasi Foto</h2>
-                    <p class="text-xs text-stone-500 mb-4">Edit tone warna & tulis namamu di atas frame.</p>
+                    <p class="text-xs text-stone-500 mb-4">Edit tone warna & tulis nama di header.</p>
 
-                    <!-- Custom Name Input -->
                     <div class="mb-4">
-                        <label class="block text-xs font-semibold text-stone-700 mb-1">Custom Nama (Di atas Ruang Bersua)</label>
-                        <input type="text" id="custom-name-input" placeholder="Misal: Nevia & Friends" oninput="renderStrip()" class="w-full p-2.5 border border-stone-300 rounded-xl text-xs focus:ring-1 focus:ring-stone-800 outline-none"/>
+                        <label class="block text-xs font-semibold text-stone-700 mb-1">Custom Nama Header</label>
+                        <input type="text" id="custom-name-input" placeholder="Misal: Nevia & Friends" oninput="renderStrip()" class="w-full p-2.5 border border-stone-300 rounded-xl text-xs outline-none focus:ring-1 focus:ring-stone-800"/>
                     </div>
 
-                    <!-- Tone Buttons -->
-                    <label class="block text-xs font-semibold text-stone-700 mb-2">Pilih Tone Warna</label>
-                    <div class="grid grid-cols-2 gap-2 mb-4">
+                    <label class="block text-xs font-semibold text-stone-700 mb-2">Pilih Tone Filter</label>
+                    <div class="grid grid-cols-2 gap-2 mb-2">
                         <button onclick="applyFilter('normal')" class="p-2.5 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:bg-stone-100">Normal</button>
                         <button onclick="applyFilter('bw')" class="p-2.5 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:bg-stone-100">B&W Classic</button>
                         <button onclick="applyFilter('warm')" class="p-2.5 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:bg-stone-100">Soft Warm</button>
                         <button onclick="applyFilter('vintage')" class="p-2.5 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:bg-stone-100">Vintage</button>
                     </div>
-
-                    <!-- Retake Photo Button -->
-                    <button onclick="retakePhotoSession()" class="w-full py-2.5 border border-red-200 text-red-600 hover:bg-red-50 text-xs font-medium rounded-xl transition-all">
-                        🔄 Foto Ulang (Retake Sesi)
-                    </button>
                 </div>
 
                 <button onclick="proceedToPrintAndFinish()" class="w-full py-4 bg-brand-primary text-white rounded-xl font-medium shadow-md hover:bg-black transition-all">
@@ -226,7 +210,7 @@
             </div>
         </div>
 
-        <!-- SCREEN 4: HASIL FOTO + CETAK OTOMATIS + BARCODE DIGITAL -->
+        <!-- SCREEN 3: FINISH (BARCODE INSTAN + EMAIL + SELESAI) -->
         <div id="screen-finish" class="hidden text-center max-w-md w-full bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-stone-200 flex flex-col items-center">
             <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-3">
                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -234,16 +218,16 @@
                 </svg>
             </div>
             <h2 class="text-2xl font-serif font-bold text-stone-800 mb-1">Foto Berhasil Dicetak!</h2>
-            <p class="text-stone-500 text-xs mb-4">Silakan ambil cetakan di printer. Scan Barcode di bawah ini untuk membuka gambar di HP.</p>
+            <p class="text-stone-500 text-xs mb-4">Ambil cetakan di printer. Scan QR Code di bawah untuk menyimpan file digital ke HP.</p>
 
             <!-- Instant QR Code Container -->
             <div class="p-4 bg-stone-50 border border-stone-200 rounded-xl mb-4 flex flex-col items-center w-full">
                 <div id="qrcode-box" class="w-44 h-44 bg-white p-2 rounded flex items-center justify-center shadow-inner"></div>
-                <span class="text-[11px] text-stone-500 font-medium mt-2">Scan QR via HP untuk Buka Gambar</span>
+                <span class="text-[11px] text-stone-500 font-medium mt-2">Scan QR via Kamera HP</span>
             </div>
 
             <!-- Form Kirim Email -->
-            <div class="w-full mb-4 pt-3 border-t border-stone-100 text-left">
+            <div class="w-full mb-6 pt-3 border-t border-stone-100 text-left">
                 <label class="block text-xs font-semibold text-stone-700 mb-1">Kirim Hasil Foto ke Email</label>
                 <div class="flex gap-2">
                     <input type="email" id="customer-email" placeholder="masukkan.email@gmail.com" class="flex-1 p-2.5 border border-stone-300 rounded-xl text-xs outline-none focus:ring-1 focus:ring-stone-800"/>
@@ -254,11 +238,12 @@
                 <span id="email-status-text" class="text-[10px] text-emerald-600 hidden mt-1 block">✓ Foto berhasil dikirim ke email!</span>
             </div>
 
-            <button onclick="finishAndResetToHome()" class="w-full py-4 bg-brand-primary hover:bg-black text-white font-medium text-xs rounded-xl transition-all">
-                Selesai
+            <button onclick="resetApp()" class="w-full py-3.5 bg-brand-primary hover:bg-black text-white font-medium text-xs rounded-xl tracking-wider uppercase transition-all">
+                SELESAI
             </button>
         </div>
 
+        <canvas id="final-strip-canvas" class="hidden"></canvas>
     </main>
 
     <footer class="w-full py-4 text-center text-xs text-stone-400 border-t border-stone-200/50">
@@ -274,17 +259,12 @@
         let selectedFilter = 'normal';
         let targetGridCount = 4;
         let customTemplateCounter = 1;
-        let editTimerInterval = null;
+        let retakeTimer = null;
+        let retakeTimeLeft = 60;
 
         const video = document.getElementById('webcam');
         const photoCanvas = document.getElementById('photo-canvas');
         const finalCanvas = document.getElementById('final-strip-canvas');
-
-        function startApp() {
-            document.getElementById('screen-welcome').classList.add('hidden');
-            document.getElementById('screen-setup').classList.remove('hidden');
-            initCamera();
-        }
 
         async function initCamera() {
             try {
@@ -298,10 +278,15 @@
             }
         }
 
-        // Admin Modal Controls
+        function goToSetup() {
+            document.getElementById('screen-welcome').classList.add('hidden');
+            document.getElementById('screen-setup').classList.remove('hidden');
+            initCamera();
+        }
+
+        // Admin Controls
         function toggleAdminModal() {
-            const modal = document.getElementById('admin-modal');
-            modal.classList.toggle('hidden');
+            document.getElementById('admin-modal').classList.toggle('hidden');
         }
 
         function checkAdminPass() {
@@ -338,10 +323,9 @@
                         radio.addEventListener('change', () => {
                             customFrameImage = img;
                             selectedTemplateColor = '#FFFFFF';
-                            highlightTemplateLabel(radio);
                         });
 
-                        alert("Template Frame berhasil ditambahkan ke pilihan customer!");
+                        alert("Template Frame berhasil ditambahkan!");
                     }
                     img.src = event.target.result;
                 }
@@ -357,16 +341,6 @@
             });
             elem.classList.remove('border-stone-200', 'text-stone-700');
             elem.classList.add('border-brand-primary', 'bg-stone-50', 'text-stone-800');
-            document.getElementById('pose-indicator-text').innerText = `Target: ${count} Pose Strip`;
-        }
-
-        function highlightTemplateLabel(element) {
-            document.querySelectorAll('#template-options label').forEach(lbl => {
-                lbl.classList.remove('border-brand-primary', 'bg-stone-50');
-                lbl.classList.add('border-stone-200');
-            });
-            element.closest('label').classList.remove('border-stone-200');
-            element.closest('label').classList.add('border-brand-primary', 'bg-stone-50');
         }
 
         function selectColorTemplate(type, elem) {
@@ -374,49 +348,24 @@
             if (type === 'white') selectedTemplateColor = '#FFFFFF';
             if (type === 'black') selectedTemplateColor = '#111111';
             if (type === 'cream') selectedTemplateColor = '#F5EBE6';
-            highlightTemplateLabel(elem);
         }
 
         async function startPhotoSession() {
             capturedPhotos = [];
             document.getElementById('btn-start-shoot').disabled = true;
-            document.getElementById('btn-start-shoot').innerText = "Sedang Foto...";
 
             for (let i = 0; i < targetGridCount; i++) {
                 await runCountdown(3);
                 triggerFlash();
                 captureSinglePhoto();
-                await new Promise(r => setTimeout(r, 800));
+                await new Promise(r => setTimeout(r, 600));
             }
 
             document.getElementById('screen-setup').classList.add('hidden');
             document.getElementById('screen-edit').classList.remove('hidden');
+            renderIndividualPhotosGrid();
             renderStrip();
-            startEditTimer(60);
-        }
-
-        function retakePhotoSession() {
-            clearInterval(editTimerInterval);
-            document.getElementById('screen-edit').classList.add('hidden');
-            document.getElementById('screen-setup').classList.remove('hidden');
-            document.getElementById('btn-start-shoot').disabled = false;
-            document.getElementById('btn-start-shoot').innerText = "Mulai Foto Sesi";
-        }
-
-        function startEditTimer(seconds) {
-            let timeLeft = seconds;
-            const timerDisplay = document.getElementById('edit-timer-display');
-            timerDisplay.innerText = `${timeLeft}s`;
-
-            clearInterval(editTimerInterval);
-            editTimerInterval = setInterval(() => {
-                timeLeft--;
-                timerDisplay.innerText = `${timeLeft}s`;
-                if (timeLeft <= 0) {
-                    clearInterval(editTimerInterval);
-                    proceedToPrintAndFinish();
-                }
-            }, 1000);
+            startRetakeTimer();
         }
 
         function runCountdown(seconds) {
@@ -456,6 +405,61 @@
             capturedPhotos.push(photoCanvas.toDataURL('image/png'));
         }
 
+        // Retake Individual Photo
+        function renderIndividualPhotosGrid() {
+            const gridContainer = document.getElementById('individual-photos-grid');
+            gridContainer.innerHTML = '';
+
+            capturedPhotos.forEach((src, idx) => {
+                const box = document.createElement('div');
+                box.className = 'relative aspect-[4/3] rounded-lg overflow-hidden border border-stone-200 group';
+                box.innerHTML = `
+                    <img src="${src}" class="w-full h-full object-cover"/>
+                    <button onclick="retakeSinglePhoto(${idx})" class="absolute inset-0 bg-black/40 text-white opacity-90 sm:opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 transition-all">
+                        <span class="text-xl">🔄</span>
+                        <span class="text-[10px] font-semibold">Foto Ulang</span>
+                    </button>
+                `;
+                gridContainer.appendChild(box);
+            });
+        }
+
+        async function retakeSinglePhoto(index) {
+            alert(`Siap foto ulang untuk Pose #${index + 1}`);
+            document.getElementById('screen-edit').classList.add('hidden');
+            document.getElementById('screen-setup').classList.remove('hidden');
+            
+            await runCountdown(3);
+            triggerFlash();
+            
+            const ctx = photoCanvas.getContext('2d');
+            photoCanvas.width = video.videoWidth;
+            photoCanvas.height = video.videoHeight;
+            ctx.translate(photoCanvas.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(video, 0, 0, photoCanvas.width, photoCanvas.height);
+            
+            capturedPhotos[index] = photoCanvas.toDataURL('image/png');
+
+            document.getElementById('screen-setup').classList.add('hidden');
+            document.getElementById('screen-edit').classList.remove('hidden');
+            renderIndividualPhotosGrid();
+            renderStrip();
+        }
+
+        function startRetakeTimer() {
+            retakeTimeLeft = 60;
+            clearInterval(retakeTimer);
+            retakeTimer = setInterval(() => {
+                retakeTimeLeft--;
+                document.getElementById('retake-timer-text').innerText = `Sisa Waktu: ${retakeTimeLeft}s`;
+                if (retakeTimeLeft <= 0) {
+                    clearInterval(retakeTimer);
+                    proceedToPrintAndFinish();
+                }
+            }, 1000);
+        }
+
         function applyFilter(filterName) {
             selectedFilter = filterName;
             renderStrip();
@@ -480,7 +484,6 @@
             ctx.fillRect(0, 0, stripWidth, stripHeight);
 
             const customName = document.getElementById('custom-name-input').value.trim();
-            
             if (customName) {
                 ctx.fillStyle = selectedTemplateColor === '#FFFFFF' || selectedTemplateColor === '#F5EBE6' ? '#2C2A29' : '#FFFFFF';
                 ctx.font = 'italic 20px Playfair Display';
@@ -526,27 +529,26 @@
             ctx.fillText(today, w / 2, h - 30);
         }
 
+        // Proceed: Print Auto & Instant Barcode
         function proceedToPrintAndFinish() {
-            clearInterval(editTimerInterval);
+            clearInterval(retakeTimer);
             document.getElementById('screen-edit').classList.add('hidden');
             document.getElementById('screen-finish').classList.remove('hidden');
 
             const finalImageSrc = finalCanvas.toDataURL('image/png');
 
-            // 1. Trigger Print Window untuk Cetak Printer Studio
+            // 1. Silent Print
             document.getElementById('print-image-target').src = finalImageSrc;
-            setTimeout(() => {
-                window.print();
-            }, 500);
+            setTimeout(() => { window.print(); }, 400);
 
-            // 2. Render Barcode Instant Real-Time
+            // 2. Generate Barcode Instant (Low-weight JPEG Base64 Data)
             const qrContainer = document.getElementById('qrcode-box');
             qrContainer.innerHTML = '';
             
-            const compressedPhotoData = finalCanvas.toDataURL('image/jpeg', 0.4);
+            const compactData = finalCanvas.toDataURL('image/jpeg', 0.4);
 
             new QRCode(qrContainer, {
-                text: compressedPhotoData,
+                text: compactData,
                 width: 160,
                 height: 160,
                 colorDark: "#2C2A29",
@@ -558,16 +560,16 @@
         function sendEmailBackup() {
             const email = document.getElementById('customer-email').value.trim();
             if(!email) {
-                alert("Silakan masukkan alamat email yang valid.");
+                alert("Masukkan alamat email.");
                 return;
             }
 
             const statusText = document.getElementById('email-status-text');
             statusText.classList.remove('hidden');
-            statusText.innerText = `✓ Hasil foto dikirim ke ${email} & disimpan ke piopio112402@gmail.com`;
+            statusText.innerText = `✓ Foto dikirim ke ${email} & backup ke piopio112402@gmail.com`;
         }
 
-        function finishAndResetToHome() {
+        function resetApp() {
             document.getElementById('screen-finish').classList.add('hidden');
             document.getElementById('screen-welcome').classList.remove('hidden');
             document.getElementById('btn-start-shoot').disabled = false;
