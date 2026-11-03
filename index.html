@@ -6,7 +6,7 @@
     <title>Ruang Bersua - Photobox System</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- QRCode JS Library (Stable CDN) -->
+    <!-- QRCode JS Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
         tailwind.config = {
@@ -43,7 +43,7 @@
 </head>
 <body class="bg-brand-bg text-brand-primary font-sans min-h-screen flex flex-col justify-between select-none overflow-x-hidden">
 
-    <!-- Area Tersembunyi Khusus Cetak Printer -->
+    <!-- Area Tersembunyi Khusus Cetak Printer Studio -->
     <div id="print-area" class="hidden">
         <img id="print-image-target" src="" class="w-full h-auto" />
     </div>
@@ -52,14 +52,13 @@
     <header class="w-full py-4 px-8 border-b border-stone-200 flex justify-between items-center bg-white/60 backdrop-blur-md sticky top-0 z-40">
         <div class="flex items-center space-x-2">
             <span class="text-2xl font-serif font-bold tracking-wider text-brand-primary">Ruang Bersua.</span>
-            <span class="text-xs bg-stone-200 text-stone-600 px-2 py-0.5 rounded-full uppercase tracking-widest font-semibold">Studio Photobox</span>
         </div>
-        <!-- Button Secret Admin -->
+        <!-- Secret Admin Access -->
         <button onclick="toggleAdminModal()" class="text-xs text-stone-400 hover:text-stone-700 flex items-center gap-1 transition-all px-3 py-1.5 rounded-lg border border-stone-200 hover:border-stone-400">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
             </svg>
-            <span>Admin Control</span>
+            <span>Admin</span>
         </button>
     </header>
 
@@ -67,13 +66,13 @@
     <div id="admin-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-stone-200">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-serif font-bold text-lg text-stone-800">Panel Operator Photobox</h3>
+                <h3 class="font-serif font-bold text-lg text-stone-800">Panel Operator Admin</h3>
                 <button onclick="toggleAdminModal()" class="text-stone-400 hover:text-stone-600 text-sm">✕</button>
             </div>
 
             <div id="admin-login-step">
-                <p class="text-xs text-stone-500 mb-3">Masukkan kata sandi admin untuk akses pengaturan printer & upload frame.</p>
-                <input type="password" id="admin-pass-input" placeholder="Kata Sandi Admin (123456)" class="w-full p-2.5 border border-stone-300 rounded-xl text-xs mb-3 outline-none focus:ring-1 focus:ring-stone-800"/>
+                <p class="text-xs text-stone-500 mb-3">Masukkan kata sandi admin (123456).</p>
+                <input type="password" id="admin-pass-input" placeholder="Kata Sandi Admin" class="w-full p-2.5 border border-stone-300 rounded-xl text-xs mb-3 outline-none focus:ring-1 focus:ring-stone-800"/>
                 <button onclick="checkAdminPass()" class="w-full py-2.5 bg-stone-800 text-white text-xs rounded-xl font-medium hover:bg-black transition-all">Masuk Admin</button>
             </div>
 
@@ -88,9 +87,9 @@
                     <input type="file" id="custom-frame-input" accept="image/png" onchange="handleAdminCustomFrame(event)" class="block w-full text-xs text-stone-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-700 cursor-pointer"/>
                 </div>
 
-                <!-- Print Copy Settings -->
+                <!-- Print Copies Setting -->
                 <div>
-                    <label class="block text-xs font-semibold text-stone-700 mb-1">Jumlah Salinan Cetak (Printer Copies):</label>
+                    <label class="block text-xs font-semibold text-stone-700 mb-1">Jumlah Lembar Cetak Otomatis:</label>
                     <select id="print-copies-select" class="w-full p-2 border border-stone-300 rounded-xl text-xs outline-none">
                         <option value="1">1 Lembar Strip</option>
                         <option value="2" selected>2 Lembar Strip (Standard Pairs)</option>
@@ -106,8 +105,16 @@
     <!-- Main Container -->
     <main class="flex-1 flex items-center justify-center p-4">
 
-        <!-- SCREEN 1: UTAMA (PILIH GRID & FRAME) -->
-        <div id="screen-setup" class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+        <!-- SCREEN 1: DEPAN (CLEAN WELCOME) -->
+        <div id="screen-welcome" class="text-center max-w-md py-12 px-6 flex flex-col items-center">
+            <h1 class="font-serif text-5xl sm:text-6xl mb-8 text-stone-800 tracking-tight font-bold">Ruang Bersua.</h1>
+            <button onclick="startApp()" class="px-12 py-4 bg-brand-primary text-white rounded-full font-medium tracking-wide shadow-lg hover:bg-black transition-all transform hover:-translate-y-0.5 active:translate-y-0">
+                Mulai
+            </button>
+        </div>
+
+        <!-- SCREEN 2: UTAMA (PILIH GRID & FRAME) -->
+        <div id="screen-setup" class="hidden w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
             <!-- Left: Live Camera Stream -->
             <div class="md:col-span-7 bg-white p-4 rounded-2xl shadow-sm border border-stone-200 flex flex-col items-center">
                 <div class="relative w-full aspect-[3/4] bg-stone-900 rounded-xl overflow-hidden shadow-inner flex items-center justify-center">
@@ -127,8 +134,8 @@
             <!-- Right: Setup Panel -->
             <div class="md:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col justify-between h-full space-y-4">
                 <div>
-                    <h2 class="text-xl font-serif font-bold text-stone-800 mb-1">Setup Photobox</h2>
-                    <p class="text-xs text-stone-500 mb-4">Pilih jumlah pose & warna frame yang kamu inginkan.</p>
+                    <h2 class="text-xl font-serif font-bold text-stone-800 mb-1">Pilihan Photobox</h2>
+                    <p class="text-xs text-stone-500 mb-4">Pilih jumlah pose & warna frame pilihanmu.</p>
 
                     <!-- 1. Grid Count Selector -->
                     <label class="block text-xs font-semibold text-stone-700 mb-2">1. Pilih Grid Pose</label>
@@ -171,7 +178,7 @@
             </div>
         </div>
 
-        <!-- SCREEN 2: EDIT TONE & CUSTOM NAMA HEADER -->
+        <!-- SCREEN 3: EDIT TONE & RETAKE WITH TIMER -->
         <div id="screen-edit" class="hidden w-full max-w-4xl flex flex-col md:flex-row items-center gap-8">
             <!-- Canvas Preview -->
             <div class="flex-1 flex justify-center">
@@ -183,6 +190,12 @@
             <!-- Edit Controls -->
             <div class="w-full md:w-80 bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col justify-between space-y-4">
                 <div>
+                    <!-- Retake Timer Warning -->
+                    <div class="flex justify-between items-center mb-3 p-2.5 bg-amber-50 border border-amber-200 rounded-xl">
+                        <span class="text-xs text-amber-800 font-medium">Sisa Waktu Edit:</span>
+                        <span id="edit-timer-display" class="text-xs font-bold text-amber-900 font-mono">60s</span>
+                    </div>
+
                     <h2 class="text-xl font-serif font-bold text-stone-800 mb-1">Kustomisasi Foto</h2>
                     <p class="text-xs text-stone-500 mb-4">Edit tone warna & tulis namamu di atas frame.</p>
 
@@ -194,12 +207,17 @@
 
                     <!-- Tone Buttons -->
                     <label class="block text-xs font-semibold text-stone-700 mb-2">Pilih Tone Warna</label>
-                    <div class="grid grid-cols-2 gap-2 mb-2">
+                    <div class="grid grid-cols-2 gap-2 mb-4">
                         <button onclick="applyFilter('normal')" class="p-2.5 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:bg-stone-100">Normal</button>
                         <button onclick="applyFilter('bw')" class="p-2.5 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:bg-stone-100">B&W Classic</button>
                         <button onclick="applyFilter('warm')" class="p-2.5 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:bg-stone-100">Soft Warm</button>
                         <button onclick="applyFilter('vintage')" class="p-2.5 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:bg-stone-100">Vintage</button>
                     </div>
+
+                    <!-- Retake Photo Button -->
+                    <button onclick="retakePhotoSession()" class="w-full py-2.5 border border-red-200 text-red-600 hover:bg-red-50 text-xs font-medium rounded-xl transition-all">
+                        🔄 Foto Ulang (Retake Sesi)
+                    </button>
                 </div>
 
                 <button onclick="proceedToPrintAndFinish()" class="w-full py-4 bg-brand-primary text-white rounded-xl font-medium shadow-md hover:bg-black transition-all">
@@ -208,7 +226,7 @@
             </div>
         </div>
 
-        <!-- SCREEN 3: LAYAR AKHIR (HASIL FOTO + CETAK + BARCODE HP) -->
+        <!-- SCREEN 4: HASIL FOTO + CETAK OTOMATIS + BARCODE DIGITAL -->
         <div id="screen-finish" class="hidden text-center max-w-md w-full bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-stone-200 flex flex-col items-center">
             <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-3">
                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -216,34 +234,29 @@
                 </svg>
             </div>
             <h2 class="text-2xl font-serif font-bold text-stone-800 mb-1">Foto Berhasil Dicetak!</h2>
-            <p class="text-stone-500 text-xs mb-4">Silakan ambil hasil cetak di printer. Scan Barcode di bawah untuk menyimpan file ke HP.</p>
+            <p class="text-stone-500 text-xs mb-4">Silakan ambil cetakan di printer. Scan Barcode di bawah ini untuk membuka gambar di HP.</p>
 
             <!-- Instant QR Code Container -->
             <div class="p-4 bg-stone-50 border border-stone-200 rounded-xl mb-4 flex flex-col items-center w-full">
                 <div id="qrcode-box" class="w-44 h-44 bg-white p-2 rounded flex items-center justify-center shadow-inner"></div>
-                <span class="text-[11px] text-stone-500 font-medium mt-2">Scan QR via Kamera HP</span>
+                <span class="text-[11px] text-stone-500 font-medium mt-2">Scan QR via HP untuk Buka Gambar</span>
             </div>
 
             <!-- Form Kirim Email -->
             <div class="w-full mb-4 pt-3 border-t border-stone-100 text-left">
-                <label class="block text-xs font-semibold text-stone-700 mb-1">Kirim Salinan Foto ke Email</label>
+                <label class="block text-xs font-semibold text-stone-700 mb-1">Kirim Hasil Foto ke Email</label>
                 <div class="flex gap-2">
                     <input type="email" id="customer-email" placeholder="masukkan.email@gmail.com" class="flex-1 p-2.5 border border-stone-300 rounded-xl text-xs outline-none focus:ring-1 focus:ring-stone-800"/>
                     <button onclick="sendEmailBackup()" class="px-4 bg-stone-800 text-white text-xs font-medium rounded-xl hover:bg-black transition-all">
                         Kirim
                     </button>
                 </div>
-                <span id="email-status-text" class="text-[10px] text-emerald-600 hidden mt-1 block">✓ Foto berhasil dikirimkan ke email!</span>
+                <span id="email-status-text" class="text-[10px] text-emerald-600 hidden mt-1 block">✓ Foto berhasil dikirim ke email!</span>
             </div>
 
-            <div class="flex gap-2 w-full">
-                <button onclick="downloadStrip()" class="flex-1 py-3 bg-stone-100 hover:bg-stone-200 text-stone-800 font-medium text-xs rounded-xl transition-all">
-                    Unduh PNG
-                </button>
-                <button onclick="resetApp()" class="flex-1 py-3 bg-brand-primary hover:bg-black text-white font-medium text-xs rounded-xl transition-all">
-                    Sesi Baru
-                </button>
-            </div>
+            <button onclick="finishAndResetToHome()" class="w-full py-4 bg-brand-primary hover:bg-black text-white font-medium text-xs rounded-xl transition-all">
+                Selesai
+            </button>
         </div>
 
     </main>
@@ -261,14 +274,17 @@
         let selectedFilter = 'normal';
         let targetGridCount = 4;
         let customTemplateCounter = 1;
+        let editTimerInterval = null;
 
         const video = document.getElementById('webcam');
         const photoCanvas = document.getElementById('photo-canvas');
         const finalCanvas = document.getElementById('final-strip-canvas');
 
-        window.onload = async () => {
-            await initCamera();
-        };
+        function startApp() {
+            document.getElementById('screen-welcome').classList.add('hidden');
+            document.getElementById('screen-setup').classList.remove('hidden');
+            initCamera();
+        }
 
         async function initCamera() {
             try {
@@ -376,6 +392,31 @@
             document.getElementById('screen-setup').classList.add('hidden');
             document.getElementById('screen-edit').classList.remove('hidden');
             renderStrip();
+            startEditTimer(60);
+        }
+
+        function retakePhotoSession() {
+            clearInterval(editTimerInterval);
+            document.getElementById('screen-edit').classList.add('hidden');
+            document.getElementById('screen-setup').classList.remove('hidden');
+            document.getElementById('btn-start-shoot').disabled = false;
+            document.getElementById('btn-start-shoot').innerText = "Mulai Foto Sesi";
+        }
+
+        function startEditTimer(seconds) {
+            let timeLeft = seconds;
+            const timerDisplay = document.getElementById('edit-timer-display');
+            timerDisplay.innerText = `${timeLeft}s`;
+
+            clearInterval(editTimerInterval);
+            editTimerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = `${timeLeft}s`;
+                if (timeLeft <= 0) {
+                    clearInterval(editTimerInterval);
+                    proceedToPrintAndFinish();
+                }
+            }, 1000);
         }
 
         function runCountdown(seconds) {
@@ -485,28 +526,27 @@
             ctx.fillText(today, w / 2, h - 30);
         }
 
-        // Tombol Lanjutkan: Cetak Otomatis + Buka Barcode Instant
         function proceedToPrintAndFinish() {
+            clearInterval(editTimerInterval);
             document.getElementById('screen-edit').classList.add('hidden');
             document.getElementById('screen-finish').classList.remove('hidden');
 
             const finalImageSrc = finalCanvas.toDataURL('image/png');
 
-            // 1. Picu Cetak Printer
+            // 1. Trigger Print Window untuk Cetak Printer Studio
             document.getElementById('print-image-target').src = finalImageSrc;
             setTimeout(() => {
                 window.print();
             }, 500);
 
-            // 2. Generate Barcode Instant Tanpa Stalling
+            // 2. Render Barcode Instant Real-Time
             const qrContainer = document.getElementById('qrcode-box');
             qrContainer.innerHTML = '';
             
-            // Kompresi ringan untuk data QR Code agar instan
-            const shortData = finalCanvas.toDataURL('image/jpeg', 0.5);
+            const compressedPhotoData = finalCanvas.toDataURL('image/jpeg', 0.4);
 
             new QRCode(qrContainer, {
-                text: shortData,
+                text: compressedPhotoData,
                 width: 160,
                 height: 160,
                 colorDark: "#2C2A29",
@@ -524,19 +564,12 @@
 
             const statusText = document.getElementById('email-status-text');
             statusText.classList.remove('hidden');
-            statusText.innerText = `✓ Salinan foto dikirim ke ${email} & disimpan ke piopio112402@gmail.com`;
+            statusText.innerText = `✓ Hasil foto dikirim ke ${email} & disimpan ke piopio112402@gmail.com`;
         }
 
-        function downloadStrip() {
-            const link = document.createElement('a');
-            link.download = `RuangBersua_${Date.now()}.png`;
-            link.href = finalCanvas.toDataURL('image/png');
-            link.click();
-        }
-
-        function resetApp() {
+        function finishAndResetToHome() {
             document.getElementById('screen-finish').classList.add('hidden');
-            document.getElementById('screen-setup').classList.remove('hidden');
+            document.getElementById('screen-welcome').classList.remove('hidden');
             document.getElementById('btn-start-shoot').disabled = false;
             document.getElementById('btn-start-shoot').innerText = "Mulai Foto Sesi";
             document.getElementById('custom-name-input').value = '';
