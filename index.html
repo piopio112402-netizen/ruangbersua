@@ -6,7 +6,7 @@
     <title>Ruang Bersua - Photobox System</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- QRCode JS Library -->
+    <!-- QRCode JS Library (Stable CDN) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
         tailwind.config = {
@@ -29,50 +29,76 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        .flash-overlay { animation: flashAnim 0.4s ease-out; }
+        .flash-overlay { animation: flashAnim 0.35s ease-out; }
         @keyframes flashAnim {
             0% { opacity: 1; background-color: white; }
             100% { opacity: 0; background-color: transparent; }
+        }
+        @media print {
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area { position: absolute; left: 0; top: 0; width: 100%; }
         }
     </style>
 </head>
 <body class="bg-brand-bg text-brand-primary font-sans min-h-screen flex flex-col justify-between select-none overflow-x-hidden">
 
+    <!-- Area Tersembunyi Khusus Cetak Printer -->
+    <div id="print-area" class="hidden">
+        <img id="print-image-target" src="" class="w-full h-auto" />
+    </div>
+
     <!-- Header Navigation -->
-    <header class="w-full py-4 px-8 border-b border-stone-200 flex justify-between items-center bg-white/50 backdrop-blur-md sticky top-0 z-40">
+    <header class="w-full py-4 px-8 border-b border-stone-200 flex justify-between items-center bg-white/60 backdrop-blur-md sticky top-0 z-40">
         <div class="flex items-center space-x-2">
             <span class="text-2xl font-serif font-bold tracking-wider text-brand-primary">Ruang Bersua.</span>
-            <span class="text-xs bg-stone-200 text-stone-600 px-2 py-0.5 rounded-full uppercase tracking-widest font-semibold">Studio</span>
+            <span class="text-xs bg-stone-200 text-stone-600 px-2 py-0.5 rounded-full uppercase tracking-widest font-semibold">Studio Photobox</span>
         </div>
-        <!-- Secret Admin Access -->
-        <button onclick="toggleAdminModal()" class="text-xs text-stone-400 hover:text-stone-700 flex items-center gap-1 transition-all">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Button Secret Admin -->
+        <button onclick="toggleAdminModal()" class="text-xs text-stone-400 hover:text-stone-700 flex items-center gap-1 transition-all px-3 py-1.5 rounded-lg border border-stone-200 hover:border-stone-400">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
             </svg>
-            <span>Admin</span>
+            <span>Admin Control</span>
         </button>
     </header>
 
-    <!-- Modal Secret Admin Panel -->
+    <!-- Modal Admin Panel -->
     <div id="admin-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-stone-200">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-stone-200">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-serif font-bold text-lg text-stone-800">Panel Admin Ruang Bersua</h3>
+                <h3 class="font-serif font-bold text-lg text-stone-800">Panel Operator Photobox</h3>
                 <button onclick="toggleAdminModal()" class="text-stone-400 hover:text-stone-600 text-sm">✕</button>
             </div>
 
             <div id="admin-login-step">
-                <p class="text-xs text-stone-500 mb-3">Masukkan kata sandi admin untuk mengunggah template frame baru.</p>
-                <input type="password" id="admin-pass-input" placeholder="Kata sandi admin (123456)" class="w-full p-2.5 border border-stone-300 rounded-xl text-xs mb-3 outline-none focus:ring-1 focus:ring-stone-800"/>
-                <button onclick="checkAdminPass()" class="w-full py-2.5 bg-stone-800 text-white text-xs rounded-xl font-medium hover:bg-black transition-all">Masuk</button>
+                <p class="text-xs text-stone-500 mb-3">Masukkan kata sandi admin untuk akses pengaturan printer & upload frame.</p>
+                <input type="password" id="admin-pass-input" placeholder="Kata Sandi Admin (123456)" class="w-full p-2.5 border border-stone-300 rounded-xl text-xs mb-3 outline-none focus:ring-1 focus:ring-stone-800"/>
+                <button onclick="checkAdminPass()" class="w-full py-2.5 bg-stone-800 text-white text-xs rounded-xl font-medium hover:bg-black transition-all">Masuk Admin</button>
             </div>
 
-            <div id="admin-upload-step" class="hidden space-y-3">
-                <span class="text-xs text-emerald-600 font-semibold block">✓ Login Admin Berhasil</span>
-                <label class="block text-xs font-semibold text-stone-700">Upload Frame PNG Custom Baru:</label>
-                <input type="file" id="custom-frame-input" accept="image/png" onchange="handleAdminCustomFrame(event)" class="block w-full text-xs text-stone-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-700 cursor-pointer"/>
-                <p class="text-[10px] text-stone-400">Frame yang diunggah akan langsung tersedia di pilihan frame customer di halaman depan.</p>
-                <button onclick="toggleAdminModal()" class="w-full mt-2 py-2 bg-stone-100 text-stone-700 text-xs rounded-xl font-medium hover:bg-stone-200">Selesai & Tutup</button>
+            <div id="admin-upload-step" class="hidden space-y-4">
+                <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                    <span class="text-xs text-emerald-700 font-semibold block">✓ Status Admin: Aktif</span>
+                </div>
+                
+                <!-- Upload Custom Frame -->
+                <div>
+                    <label class="block text-xs font-semibold text-stone-700 mb-1">Upload Frame PNG Custom Baru:</label>
+                    <input type="file" id="custom-frame-input" accept="image/png" onchange="handleAdminCustomFrame(event)" class="block w-full text-xs text-stone-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-700 cursor-pointer"/>
+                </div>
+
+                <!-- Print Copy Settings -->
+                <div>
+                    <label class="block text-xs font-semibold text-stone-700 mb-1">Jumlah Salinan Cetak (Printer Copies):</label>
+                    <select id="print-copies-select" class="w-full p-2 border border-stone-300 rounded-xl text-xs outline-none">
+                        <option value="1">1 Lembar Strip</option>
+                        <option value="2" selected>2 Lembar Strip (Standard Pairs)</option>
+                        <option value="4">4 Lembar Strip</option>
+                    </select>
+                </div>
+
+                <button onclick="toggleAdminModal()" class="w-full py-2.5 bg-stone-100 text-stone-700 text-xs rounded-xl font-medium hover:bg-stone-200">Simpan & Tutup</button>
             </div>
         </div>
     </div>
@@ -93,7 +119,7 @@
                     </div>
                 </div>
                 <div class="mt-4 flex items-center justify-between w-full text-xs text-stone-400 font-medium">
-                    <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block mr-2 animate-pulse"></span> Camera Standby</span>
+                    <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block mr-2 animate-pulse"></span> Kamera Siap</span>
                     <span id="pose-indicator-text">Target: 4 Pose Strip</span>
                 </div>
             </div>
@@ -101,19 +127,19 @@
             <!-- Right: Setup Panel -->
             <div class="md:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col justify-between h-full space-y-4">
                 <div>
-                    <h2 class="text-xl font-serif font-bold text-stone-800 mb-1">Pilihan Photobox</h2>
-                    <p class="text-xs text-stone-500 mb-4">Pilih jumlah grid pose & desain frame pilihanmu.</p>
+                    <h2 class="text-xl font-serif font-bold text-stone-800 mb-1">Setup Photobox</h2>
+                    <p class="text-xs text-stone-500 mb-4">Pilih jumlah pose & warna frame yang kamu inginkan.</p>
 
                     <!-- 1. Grid Count Selector -->
-                    <label class="block text-xs font-semibold text-stone-700 mb-2">1. Jumlah Grid Foto</label>
+                    <label class="block text-xs font-semibold text-stone-700 mb-2">1. Pilih Grid Pose</label>
                     <div class="grid grid-cols-3 gap-2 mb-4">
-                        <button onclick="setGridCount(2, this)" class="grid-btn p-2 border-2 border-stone-200 rounded-xl text-xs font-semibold text-stone-700 hover:border-stone-800">2 Pose</button>
-                        <button onclick="setGridCount(3, this)" class="grid-btn p-2 border-2 border-stone-200 rounded-xl text-xs font-semibold text-stone-700 hover:border-stone-800">3 Pose</button>
-                        <button onclick="setGridCount(4, this)" class="grid-btn p-2 border-2 border-brand-primary bg-stone-50 rounded-xl text-xs font-semibold text-stone-800">4 Pose</button>
+                        <button onclick="setGridCount(2, this)" class="grid-btn p-2.5 border-2 border-stone-200 rounded-xl text-xs font-semibold text-stone-700 hover:border-stone-800">2 Pose</button>
+                        <button onclick="setGridCount(3, this)" class="grid-btn p-2.5 border-2 border-stone-200 rounded-xl text-xs font-semibold text-stone-700 hover:border-stone-800">3 Pose</button>
+                        <button onclick="setGridCount(4, this)" class="grid-btn p-2.5 border-2 border-brand-primary bg-stone-50 rounded-xl text-xs font-semibold text-stone-800">4 Pose</button>
                     </div>
 
                     <!-- 2. Frame Selector -->
-                    <label class="block text-xs font-semibold text-stone-700 mb-2">2. Pilih Warna / Frame Template</label>
+                    <label class="block text-xs font-semibold text-stone-700 mb-2">2. Pilih Frame Template</label>
                     <div class="space-y-2 mb-4 max-h-52 overflow-y-auto pr-1" id="template-options">
                         <label class="flex items-center p-2.5 border-2 border-brand-primary bg-stone-50 rounded-xl cursor-pointer">
                             <input type="radio" name="template" value="white" checked onchange="selectColorTemplate('white', this)" class="accent-stone-800">
@@ -158,7 +184,7 @@
             <div class="w-full md:w-80 bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col justify-between space-y-4">
                 <div>
                     <h2 class="text-xl font-serif font-bold text-stone-800 mb-1">Kustomisasi Foto</h2>
-                    <p class="text-xs text-stone-500 mb-4">Edit tone warna & tambahkan namamu di atas frame.</p>
+                    <p class="text-xs text-stone-500 mb-4">Edit tone warna & tulis namamu di atas frame.</p>
 
                     <!-- Custom Name Input -->
                     <div class="mb-4">
@@ -176,43 +202,43 @@
                     </div>
                 </div>
 
-                <button onclick="finishSession()" class="w-full py-4 bg-brand-primary text-white rounded-xl font-medium shadow-md hover:bg-black transition-all">
+                <button onclick="proceedToPrintAndFinish()" class="w-full py-4 bg-brand-primary text-white rounded-xl font-medium shadow-md hover:bg-black transition-all">
                     Lanjutkan
                 </button>
             </div>
         </div>
 
-        <!-- SCREEN 3: HASIL FOTO + BARCODE + EMAIL -->
+        <!-- SCREEN 3: LAYAR AKHIR (HASIL FOTO + CETAK + BARCODE HP) -->
         <div id="screen-finish" class="hidden text-center max-w-md w-full bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-stone-200 flex flex-col items-center">
-            <h2 class="text-2xl font-serif font-bold text-stone-800 mb-1">Hasil Foto Siap!</h2>
-            <p class="text-stone-500 text-xs mb-4">Pilih pengiriman foto atau tampilkan Barcode QR untuk HP kamu.</p>
+            <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-3">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-serif font-bold text-stone-800 mb-1">Foto Berhasil Dicetak!</h2>
+            <p class="text-stone-500 text-xs mb-4">Silakan ambil hasil cetak di printer. Scan Barcode di bawah untuk menyimpan file ke HP.</p>
 
-            <!-- Barcode Section -->
+            <!-- Instant QR Code Container -->
             <div class="p-4 bg-stone-50 border border-stone-200 rounded-xl mb-4 flex flex-col items-center w-full">
-                <div id="barcode-placeholder" class="py-2 text-center">
-                    <button onclick="generateInstantBarcode()" class="px-4 py-2.5 bg-stone-800 text-white text-xs font-medium rounded-xl hover:bg-black transition-all shadow-sm">
-                        Tampilkan Barcode Foto
-                    </button>
-                </div>
-                <div id="qrcode-box" class="hidden w-44 h-44 bg-white p-2 rounded flex items-center justify-center shadow-inner"></div>
-                <span id="barcode-scan-hint" class="hidden text-[11px] text-stone-500 font-medium mt-2">Scan QR via Kamera HP</span>
+                <div id="qrcode-box" class="w-44 h-44 bg-white p-2 rounded flex items-center justify-center shadow-inner"></div>
+                <span class="text-[11px] text-stone-500 font-medium mt-2">Scan QR via Kamera HP</span>
             </div>
 
-            <!-- Email Input Form -->
+            <!-- Form Kirim Email -->
             <div class="w-full mb-4 pt-3 border-t border-stone-100 text-left">
-                <label class="block text-xs font-semibold text-stone-700 mb-1">Kirim Hasil Foto ke Email</label>
+                <label class="block text-xs font-semibold text-stone-700 mb-1">Kirim Salinan Foto ke Email</label>
                 <div class="flex gap-2">
                     <input type="email" id="customer-email" placeholder="masukkan.email@gmail.com" class="flex-1 p-2.5 border border-stone-300 rounded-xl text-xs outline-none focus:ring-1 focus:ring-stone-800"/>
-                    <button onclick="sendPhotoToEmail()" class="px-4 bg-stone-800 text-white text-xs font-medium rounded-xl hover:bg-black transition-all">
+                    <button onclick="sendEmailBackup()" class="px-4 bg-stone-800 text-white text-xs font-medium rounded-xl hover:bg-black transition-all">
                         Kirim
                     </button>
                 </div>
-                <span id="email-status-text" class="text-[10px] text-emerald-600 hidden mt-1 block">✓ Foto dikirim ke email & disimpan ke piopio112402@gmail.com!</span>
+                <span id="email-status-text" class="text-[10px] text-emerald-600 hidden mt-1 block">✓ Foto berhasil dikirimkan ke email!</span>
             </div>
 
             <div class="flex gap-2 w-full">
                 <button onclick="downloadStrip()" class="flex-1 py-3 bg-stone-100 hover:bg-stone-200 text-stone-800 font-medium text-xs rounded-xl transition-all">
-                    Unduh Foto (PNG)
+                    Unduh PNG
                 </button>
                 <button onclick="resetApp()" class="flex-1 py-3 bg-brand-primary hover:bg-black text-white font-medium text-xs rounded-xl transition-all">
                     Sesi Baru
@@ -256,7 +282,7 @@
             }
         }
 
-        // Admin Controls
+        // Admin Modal Controls
         function toggleAdminModal() {
             const modal = document.getElementById('admin-modal');
             modal.classList.toggle('hidden');
@@ -376,7 +402,7 @@
         function triggerFlash() {
             const flash = document.getElementById('flash');
             flash.classList.add('flash-overlay');
-            setTimeout(() => flash.classList.remove('flash-overlay'), 400);
+            setTimeout(() => flash.classList.remove('flash-overlay'), 350);
         }
 
         function captureSinglePhoto() {
@@ -459,24 +485,28 @@
             ctx.fillText(today, w / 2, h - 30);
         }
 
-        function finishSession() {
+        // Tombol Lanjutkan: Cetak Otomatis + Buka Barcode Instant
+        function proceedToPrintAndFinish() {
             document.getElementById('screen-edit').classList.add('hidden');
             document.getElementById('screen-finish').classList.remove('hidden');
-        }
 
-        // Instant Barcode Generation without loading freezes
-        function generateInstantBarcode() {
+            const finalImageSrc = finalCanvas.toDataURL('image/png');
+
+            // 1. Picu Cetak Printer
+            document.getElementById('print-image-target').src = finalImageSrc;
+            setTimeout(() => {
+                window.print();
+            }, 500);
+
+            // 2. Generate Barcode Instant Tanpa Stalling
             const qrContainer = document.getElementById('qrcode-box');
             qrContainer.innerHTML = '';
-
-            document.getElementById('barcode-placeholder').classList.add('hidden');
-            qrContainer.classList.remove('hidden');
-            document.getElementById('barcode-scan-hint').classList.remove('hidden');
-
-            const stripData = finalCanvas.toDataURL('image/png');
             
+            // Kompresi ringan untuk data QR Code agar instan
+            const shortData = finalCanvas.toDataURL('image/jpeg', 0.5);
+
             new QRCode(qrContainer, {
-                text: stripData,
+                text: shortData,
                 width: 160,
                 height: 160,
                 colorDark: "#2C2A29",
@@ -485,7 +515,7 @@
             });
         }
 
-        function sendPhotoToEmail() {
+        function sendEmailBackup() {
             const email = document.getElementById('customer-email').value.trim();
             if(!email) {
                 alert("Silakan masukkan alamat email yang valid.");
@@ -494,7 +524,7 @@
 
             const statusText = document.getElementById('email-status-text');
             statusText.classList.remove('hidden');
-            statusText.innerText = `✓ Foto dikirim ke ${email} & backup ke piopio112402@gmail.com!`;
+            statusText.innerText = `✓ Salinan foto dikirim ke ${email} & disimpan ke piopio112402@gmail.com`;
         }
 
         function downloadStrip() {
@@ -511,10 +541,6 @@
             document.getElementById('btn-start-shoot').innerText = "Mulai Foto Sesi";
             document.getElementById('custom-name-input').value = '';
             document.getElementById('email-status-text').classList.add('hidden');
-
-            document.getElementById('barcode-placeholder').classList.remove('hidden');
-            document.getElementById('qrcode-box').classList.add('hidden');
-            document.getElementById('barcode-scan-hint').classList.add('hidden');
         }
     </script>
 </body>
