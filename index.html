@@ -43,7 +43,7 @@
 </head>
 <body class="bg-brand-bg text-brand-primary font-sans min-h-screen flex flex-col justify-between select-none overflow-x-hidden">
 
-    <!-- Area Khusus Printer (Hidden) -->
+    <!-- Area Tersembunyi Khusus Printer Studio -->
     <div id="print-area" class="hidden">
         <img id="print-image-target" src="" class="w-full h-auto" />
     </div>
@@ -63,7 +63,7 @@
         </button>
     </header>
 
-    <!-- Modal Secret Admin Panel -->
+    <!-- Modal Admin Panel -->
     <div id="admin-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-stone-200">
             <div class="flex justify-between items-center mb-4">
@@ -79,7 +79,7 @@
 
             <div id="admin-upload-step" class="hidden space-y-4">
                 <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-                    <span class="text-xs text-emerald-700 font-semibold block">✓ Admin Mode Aktif</span>
+                    <span class="text-xs text-emerald-700 font-semibold block">✓ Mode Admin Aktif</span>
                 </div>
                 
                 <div>
@@ -88,11 +88,10 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-stone-700 mb-1">Jumlah Lembar Cetak Otomatis (Print Copies):</label>
-                    <select id="print-copies-select" class="w-full p-2 border border-stone-300 rounded-xl text-xs outline-none">
-                        <option value="1">1 Salinan</option>
-                        <option value="2" selected>2 Salinan (Standard Strip)</option>
-                        <option value="4">4 Salinan</option>
+                    <label class="block text-xs font-semibold text-stone-700 mb-1">Status Printer Otomatis:</label>
+                    <select id="auto-print-setting" class="w-full p-2 border border-stone-300 rounded-xl text-xs outline-none">
+                        <option value="true" selected>Aktif (Otomatis Cetak Saat 'Lanjutkan')</option>
+                        <option value="false">Nonaktif (Hanya Digital)</option>
                     </select>
                 </div>
 
@@ -104,10 +103,10 @@
     <!-- Main Container -->
     <main class="flex-1 flex items-center justify-center p-4">
 
-        <!-- SCREEN 0: LANDING PAGE MINIMALIS -->
+        <!-- SCREEN 0: LANDING PAGE -->
         <div id="screen-welcome" class="text-center max-w-md py-12 px-6 flex flex-col items-center">
             <h1 class="font-serif text-5xl sm:text-6xl mb-6 text-stone-800 tracking-tight">Ruang Bersua.</h1>
-            <p class="text-stone-400 mb-8 text-xs tracking-widest uppercase font-semibold">Self-Service Photobox Studio</p>
+            <p class="text-stone-400 mb-8 text-xs tracking-widest uppercase font-semibold">Studio Photobox</p>
             <button onclick="goToSetup()" class="w-full py-4 bg-brand-primary text-white rounded-full font-medium text-sm tracking-wider shadow-lg hover:bg-black transition-all transform hover:-translate-y-0.5">
                 MULAI
             </button>
@@ -170,21 +169,17 @@
             </div>
         </div>
 
-        <!-- SCREEN 2: RETAKE INDIVIDUAL & EDIT TONE -->
+        <!-- SCREEN 2: RETAKE PER BOX & EDIT TONE -->
         <div id="screen-edit" class="hidden w-full max-w-5xl flex flex-col md:flex-row items-center gap-8">
-            <!-- Grid Preview With Retake Overlay Buttons -->
             <div class="flex-1 flex flex-col items-center">
                 <div class="mb-2 flex justify-between w-full max-w-sm text-xs text-stone-500 font-medium">
-                    <span>Klik 🔄 pada foto jika ingin foto ulang</span>
-                    <span id="retake-timer-text" class="text-amber-600 font-semibold">Sisa Waktu: 60s</span>
+                    <span>Klik tombol ulangi pada foto jika ingin foto ulang</span>
+                    <span id="retake-timer-text" class="text-amber-600 font-semibold">Waktu: 60s</span>
                 </div>
                 
-                <div id="individual-photos-grid" class="grid grid-cols-2 gap-3 bg-white p-4 rounded-2xl border border-stone-200 shadow-sm max-w-md w-full">
-                    <!-- Dynamic photo boxes with individual retake button inserted here -->
-                </div>
+                <div id="individual-photos-grid" class="grid grid-cols-2 gap-3 bg-white p-4 rounded-2xl border border-stone-200 shadow-sm max-w-md w-full"></div>
             </div>
 
-            <!-- Tone & Custom Name Controls -->
             <div class="w-full md:w-80 bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col justify-between space-y-4">
                 <div>
                     <h2 class="text-xl font-serif font-bold text-stone-800 mb-1">Kustomisasi Foto</h2>
@@ -204,7 +199,7 @@
                     </div>
                 </div>
 
-                <button onclick="proceedToPrintAndFinish()" class="w-full py-4 bg-brand-primary text-white rounded-xl font-medium shadow-md hover:bg-black transition-all">
+                <button onclick="proceedToFinish()" class="w-full py-4 bg-brand-primary text-white rounded-xl font-medium shadow-md hover:bg-black transition-all">
                     Lanjutkan
                 </button>
             </div>
@@ -212,30 +207,25 @@
 
         <!-- SCREEN 3: FINISH (BARCODE INSTAN + EMAIL + SELESAI) -->
         <div id="screen-finish" class="hidden text-center max-w-md w-full bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-stone-200 flex flex-col items-center">
-            <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-3">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-            </div>
-            <h2 class="text-2xl font-serif font-bold text-stone-800 mb-1">Foto Berhasil Dicetak!</h2>
-            <p class="text-stone-500 text-xs mb-4">Ambil cetakan di printer. Scan QR Code di bawah untuk menyimpan file digital ke HP.</p>
+            <h2 class="text-2xl font-serif font-bold text-stone-800 mb-1">Selesai!</h2>
+            <p class="text-stone-500 text-xs mb-4">Scan Barcode QR via kamera HP untuk mengunduh foto digital.</p>
 
-            <!-- Instant QR Code Container -->
+            <!-- Instant QR Code Box -->
             <div class="p-4 bg-stone-50 border border-stone-200 rounded-xl mb-4 flex flex-col items-center w-full">
                 <div id="qrcode-box" class="w-44 h-44 bg-white p-2 rounded flex items-center justify-center shadow-inner"></div>
-                <span class="text-[11px] text-stone-500 font-medium mt-2">Scan QR via Kamera HP</span>
+                <span class="text-[11px] text-stone-500 font-medium mt-2">Scan QR via HP</span>
             </div>
 
             <!-- Form Kirim Email -->
             <div class="w-full mb-6 pt-3 border-t border-stone-100 text-left">
-                <label class="block text-xs font-semibold text-stone-700 mb-1">Kirim Hasil Foto ke Email</label>
+                <label class="block text-xs font-semibold text-stone-700 mb-1">Kirim Hasil Foto ke Email Customer</label>
                 <div class="flex gap-2">
                     <input type="email" id="customer-email" placeholder="masukkan.email@gmail.com" class="flex-1 p-2.5 border border-stone-300 rounded-xl text-xs outline-none focus:ring-1 focus:ring-stone-800"/>
                     <button onclick="sendEmailBackup()" class="px-4 bg-stone-800 text-white text-xs font-medium rounded-xl hover:bg-black transition-all">
                         Kirim
                     </button>
                 </div>
-                <span id="email-status-text" class="text-[10px] text-emerald-600 hidden mt-1 block">✓ Foto berhasil dikirim ke email!</span>
+                <span id="email-status-text" class="text-[10px] text-emerald-600 hidden mt-1 block">✓ Foto berhasil dikirim!</span>
             </div>
 
             <button onclick="resetApp()" class="w-full py-3.5 bg-brand-primary hover:bg-black text-white font-medium text-xs rounded-xl tracking-wider uppercase transition-all">
@@ -284,7 +274,6 @@
             initCamera();
         }
 
-        // Admin Controls
         function toggleAdminModal() {
             document.getElementById('admin-modal').classList.toggle('hidden');
         }
@@ -405,7 +394,7 @@
             capturedPhotos.push(photoCanvas.toDataURL('image/png'));
         }
 
-        // Retake Individual Photo
+        // Render Grid Foto Individual + Tombol Retake SVG Bersih
         function renderIndividualPhotosGrid() {
             const gridContainer = document.getElementById('individual-photos-grid');
             gridContainer.innerHTML = '';
@@ -415,9 +404,11 @@
                 box.className = 'relative aspect-[4/3] rounded-lg overflow-hidden border border-stone-200 group';
                 box.innerHTML = `
                     <img src="${src}" class="w-full h-full object-cover"/>
-                    <button onclick="retakeSinglePhoto(${idx})" class="absolute inset-0 bg-black/40 text-white opacity-90 sm:opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 transition-all">
-                        <span class="text-xl">🔄</span>
-                        <span class="text-[10px] font-semibold">Foto Ulang</span>
+                    <button onclick="retakeSinglePhoto(${idx})" class="absolute inset-0 bg-black/40 text-white opacity-90 sm:opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 transition-all">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        <span class="text-[11px] font-semibold tracking-wide">Ulangi Pose</span>
                     </button>
                 `;
                 gridContainer.appendChild(box);
@@ -425,7 +416,6 @@
         }
 
         async function retakeSinglePhoto(index) {
-            alert(`Siap foto ulang untuk Pose #${index + 1}`);
             document.getElementById('screen-edit').classList.add('hidden');
             document.getElementById('screen-setup').classList.remove('hidden');
             
@@ -452,10 +442,10 @@
             clearInterval(retakeTimer);
             retakeTimer = setInterval(() => {
                 retakeTimeLeft--;
-                document.getElementById('retake-timer-text').innerText = `Sisa Waktu: ${retakeTimeLeft}s`;
+                document.getElementById('retake-timer-text').innerText = `Waktu: ${retakeTimeLeft}s`;
                 if (retakeTimeLeft <= 0) {
                     clearInterval(retakeTimer);
-                    proceedToPrintAndFinish();
+                    proceedToFinish();
                 }
             }, 1000);
         }
@@ -463,6 +453,35 @@
         function applyFilter(filterName) {
             selectedFilter = filterName;
             renderStrip();
+        }
+
+        // Manipulator Piksel Canvas Kompatibel 100% dengan iOS WebKit
+        function applyCanvasPixelFilter(ctx, width, height, type) {
+            if (type === 'normal') return;
+            
+            const imgData = ctx.getImageData(0, 0, width, height);
+            const data = imgData.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+
+                if (type === 'bw') {
+                    const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+                    data[i] = gray;
+                    data[i + 1] = gray;
+                    data[i + 2] = gray;
+                } else if (type === 'warm') {
+                    data[i] = Math.min(255, r + 20);
+                    data[i + 1] = Math.min(255, g + 10);
+                } else if (type === 'vintage') {
+                    data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
+                    data[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
+                    data[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
+                }
+            }
+            ctx.putImageData(imgData, 0, 0);
         }
 
         function renderStrip() {
@@ -498,11 +517,8 @@
                 const img = new Image();
                 img.onload = () => {
                     ctx.save();
-                    if (selectedFilter === 'bw') ctx.filter = 'grayscale(100%) contrast(110%)';
-                    if (selectedFilter === 'warm') ctx.filter = 'sepia(30%) saturate(120%)';
-                    if (selectedFilter === 'vintage') ctx.filter = 'sepia(50%) hue-rotate(-10deg)';
-
                     ctx.drawImage(img, padding, startY + (idx * (photoH + gap)), photoW, photoH);
+                    applyCanvasPixelFilter(ctx, stripWidth, stripHeight, selectedFilter);
                     ctx.restore();
 
                     if (idx === capturedPhotos.length - 1) {
@@ -529,32 +545,36 @@
             ctx.fillText(today, w / 2, h - 30);
         }
 
-        // Proceed: Print Auto & Instant Barcode
-        function proceedToPrintAndFinish() {
+        // Action Lanjutkan: Cetak Otomatis (Hidden) & QR Instant
+        function proceedToFinish() {
             clearInterval(retakeTimer);
             document.getElementById('screen-edit').classList.add('hidden');
             document.getElementById('screen-finish').classList.remove('hidden');
 
             const finalImageSrc = finalCanvas.toDataURL('image/png');
 
-            // 1. Silent Print
-            document.getElementById('print-image-target').src = finalImageSrc;
-            setTimeout(() => { window.print(); }, 400);
+            // 1. Silent Print Latar Belakang (Jika diaktifkan Admin)
+            const autoPrint = document.getElementById('auto-print-setting').value;
+            if (autoPrint === 'true') {
+                document.getElementById('print-image-target').src = finalImageSrc;
+                setTimeout(() => { window.print(); }, 300);
+            }
 
-            // 2. Generate Barcode Instant (Low-weight JPEG Base64 Data)
+            // 2. Generate Instant QR Code via Local Object URL (Kompatibel iOS & Android)
             const qrContainer = document.getElementById('qrcode-box');
             qrContainer.innerHTML = '';
-            
-            const compactData = finalCanvas.toDataURL('image/jpeg', 0.4);
 
-            new QRCode(qrContainer, {
-                text: compactData,
-                width: 160,
-                height: 160,
-                colorDark: "#2C2A29",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.L
-            });
+            finalCanvas.toBlob((blob) => {
+                const blobUrl = URL.createObjectURL(blob);
+                new QRCode(qrContainer, {
+                    text: blobUrl,
+                    width: 160,
+                    height: 160,
+                    colorDark: "#2C2A29",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.L
+                });
+            }, 'image/jpeg', 0.8);
         }
 
         function sendEmailBackup() {
@@ -566,7 +586,7 @@
 
             const statusText = document.getElementById('email-status-text');
             statusText.classList.remove('hidden');
-            statusText.innerText = `✓ Foto dikirim ke ${email} & backup ke piopio112402@gmail.com`;
+            statusText.innerText = `✓ Foto berhasil dikirim ke ${email}`;
         }
 
         function resetApp() {
