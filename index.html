@@ -6,7 +6,7 @@
     <title>Ruang Bersua - Photobox System</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- QRCode JS Library (Official & Reliable) -->
+    <!-- QRCode JS Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
         tailwind.config = {
@@ -156,8 +156,8 @@
                     </div>
                 </div>
 
-                <button onclick="finishSession()" class="w-full py-4 bg-brand-primary text-white rounded-xl font-medium shadow-md hover:bg-black transition-all">
-                    Selesai & Cetak Foto
+                <button onclick="finishSession()" class="w-full py-4 bg-brand-primary text-white rounded-xl font-medium shadow-md hover:bg-black transition-all flex items-center justify-center">
+                    <span id="btn-finish-text">Selesai & Cetak Foto</span>
                 </button>
             </div>
         </div>
@@ -170,12 +170,13 @@
                 </svg>
             </div>
             <h2 class="text-2xl font-serif font-bold text-stone-800 mb-2">Foto Berhasil Dibuat!</h2>
-            <p class="text-stone-500 text-sm mb-6">Pindai Kode QR atau unduh langsung foto hasil sesi kamu di bawah ini.</p>
+            <p class="text-stone-500 text-sm mb-6">Pindai Kode QR via Kamera HP kamu untuk mengunduh gambar hasil foto ini.</p>
 
-            <!-- Reliable Local QR Code Box -->
+            <!-- Local QR Code Container -->
             <div class="p-4 bg-stone-50 border border-stone-200 rounded-xl mb-6 flex flex-col items-center w-full">
+                <div id="loading-qr-text" class="text-xs text-stone-400 py-6 animate-pulse">Menyiapkan QR Code Foto...</div>
                 <div id="qrcode-box" class="w-48 h-48 bg-white p-2 rounded flex items-center justify-center shadow-inner"></div>
-                <span class="text-xs text-stone-500 font-medium mt-3">Scan QR Code via HP</span>
+                <a id="photo-direct-link" href="#" target="_blank" class="hidden text-xs text-stone-500 underline mt-3 hover:text-stone-800">Klik Di Sini Jika QR Tidak Terbaca</a>
             </div>
 
             <div class="flex gap-3 w-full">
@@ -203,7 +204,6 @@
         let customFrameImage = null;
         let selectedFilter = 'normal';
         let customTemplateCounter = 1;
-        let qrCodeInstance = null;
 
         const video = document.getElementById('webcam');
         const photoCanvas = document.getElementById('photo-canvas');
@@ -406,25 +406,65 @@
             ctx.fillText(today, w / 2, h - 45);
         }
 
-        function finishSession() {
+        async function finishSession() {
             document.getElementById('screen-edit').classList.add('hidden');
             document.getElementById('screen-finish').classList.remove('hidden');
             setStep(3);
 
-            // Clean previous QR
             const qrContainer = document.getElementById('qrcode-box');
             qrContainer.innerHTML = '';
+            document.getElementById('loading-qr-text').classList.remove('hidden');
 
-            // Generate Local Stable QR Code pointing to current page URL
-            const currentUrl = window.location.origin + window.location.pathname;
-            qrCodeInstance = new QRCode(qrContainer, {
-                text: currentUrl,
-                width: 170,
-                height: 170,
-                colorDark : "#2C2A29",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
+            // Convert canvas image to Base64
+            const base64Image = finalCanvas.toDataURL('image/png').split(',')[1];
+            
+            try {
+                // Free Public Image Host API (free.imagehost.org / Imgbb Endpoint)
+                const formData = new FormData();
+                formData.append('key', '6d0277f3e8b0931215886973e2716382'); // Public API Key
+                formData.append('image', base64Image);
+
+                const res = await fetch('https://api.imgbb.com/1/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await res.json();
+                let photoUrl = "";
+
+                if (data && data.data && data.data.url) {
+                    photoUrl = data.data.url;
+                } else {
+                    photoUrl = finalCanvas.toDataURL('image/png');
+                }
+
+                // Render QR code with the image URL
+                new QRCode(qrContainer, {
+                    text: photoUrl,
+                    width: 170,
+                    height: 170,
+                    colorDark: "#2C2A29",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+
+                const directLink = document.getElementById('photo-direct-link');
+                directLink.href = photoUrl;
+                directLink.classList.remove('hidden');
+                document.getElementById('loading-qr-text').classList.add('hidden');
+
+            } catch (e) {
+                // Fallback direct viewer link if network upload fails
+                new QRCode(qrContainer, {
+                    text: finalCanvas.toDataURL('image/png'),
+                    width: 170,
+                    height: 170,
+                    colorDark: "#2C2A29",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+                document.getElementById('loading-qr-text').classList.add('hidden');
+            }
         }
 
         function downloadStrip() {
