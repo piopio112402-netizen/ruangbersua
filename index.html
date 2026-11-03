@@ -205,32 +205,44 @@
             </div>
         </div>
 
-        <!-- SCREEN 3: FINISH (BARCODE INSTAN + EMAIL + SELESAI) -->
-        <div id="screen-finish" class="hidden text-center max-w-md w-full bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-stone-200 flex flex-col items-center">
-            <h2 class="text-2xl font-serif font-bold text-stone-800 mb-1">Selesai!</h2>
-            <p class="text-stone-500 text-xs mb-4">Scan Barcode QR via kamera HP untuk mengunduh foto digital.</p>
-
-            <!-- Instant QR Code Box -->
-            <div class="p-4 bg-stone-50 border border-stone-200 rounded-xl mb-4 flex flex-col items-center w-full">
-                <div id="qrcode-box" class="w-44 h-44 bg-white p-2 rounded flex items-center justify-center shadow-inner"></div>
-                <span class="text-[11px] text-stone-500 font-medium mt-2">Scan QR via HP</span>
-            </div>
-
-            <!-- Form Kirim Email -->
-            <div class="w-full mb-6 pt-3 border-t border-stone-100 text-left">
-                <label class="block text-xs font-semibold text-stone-700 mb-1">Kirim Hasil Foto ke Email Customer</label>
-                <div class="flex gap-2">
-                    <input type="email" id="customer-email" placeholder="masukkan.email@gmail.com" class="flex-1 p-2.5 border border-stone-300 rounded-xl text-xs outline-none focus:ring-1 focus:ring-stone-800"/>
-                    <button onclick="sendEmailBackup()" class="px-4 bg-stone-800 text-white text-xs font-medium rounded-xl hover:bg-black transition-all">
-                        Kirim
-                    </button>
+        <!-- SCREEN 3: FINISH (PREVIEW + BARCODE INSTAN + EMAIL) -->
+        <div id="screen-finish" class="hidden w-full max-w-4xl flex flex-col md:flex-row items-center gap-8">
+            <!-- Left: Final Strip Image Preview -->
+            <div class="flex-1 flex justify-center">
+                <div class="bg-stone-800 p-3 rounded-2xl shadow-2xl">
+                    <img id="final-preview-img" src="" class="max-h-[65vh] w-auto rounded border border-stone-700" alt="Preview Hasil Foto Strip"/>
                 </div>
-                <span id="email-status-text" class="text-[10px] text-emerald-600 hidden mt-1 block">✓ Foto berhasil dikirim!</span>
             </div>
 
-            <button onclick="resetApp()" class="w-full py-3.5 bg-brand-primary hover:bg-black text-white font-medium text-xs rounded-xl tracking-wider uppercase transition-all">
-                SELESAI
-            </button>
+            <!-- Right: Action Panel (QR Code & Email) -->
+            <div class="w-full md:w-96 bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-stone-200 flex flex-col items-center text-center space-y-4">
+                <div>
+                    <h2 class="text-2xl font-serif font-bold text-stone-800 mb-1">Selesai!</h2>
+                    <p class="text-stone-500 text-xs">Foto telah diproses. Scan Barcode QR via kamera HP untuk menyimpan foto digital.</p>
+                </div>
+
+                <!-- Instant QR Code Container -->
+                <div class="p-4 bg-stone-50 border border-stone-200 rounded-xl flex flex-col items-center w-full">
+                    <div id="qrcode-box" class="w-40 h-40 bg-white p-2 rounded flex items-center justify-center shadow-inner"></div>
+                    <span class="text-[11px] text-stone-500 font-medium mt-2">Arahkan Kamera HP ke QR Code</span>
+                </div>
+
+                <!-- Form Kirim Email -->
+                <div class="w-full pt-2 border-t border-stone-100 text-left">
+                    <label class="block text-xs font-semibold text-stone-700 mb-1">Kirim Hasil Foto ke Email</label>
+                    <div class="flex gap-2">
+                        <input type="email" id="customer-email" placeholder="masukkan.email@gmail.com" class="flex-1 p-2.5 border border-stone-300 rounded-xl text-xs outline-none focus:ring-1 focus:ring-stone-800"/>
+                        <button onclick="sendEmailBackup()" class="px-4 bg-stone-800 text-white text-xs font-medium rounded-xl hover:bg-black transition-all">
+                            Kirim
+                        </button>
+                    </div>
+                    <span id="email-status-text" class="text-[10px] text-emerald-600 hidden mt-1 block">✓ Foto berhasil dikirim!</span>
+                </div>
+
+                <button onclick="resetApp()" class="w-full py-3.5 bg-brand-primary hover:bg-black text-white font-medium text-xs rounded-xl tracking-wider uppercase transition-all shadow-md">
+                    SELESAI
+                </button>
+            </div>
         </div>
 
         <canvas id="final-strip-canvas" class="hidden"></canvas>
@@ -394,7 +406,6 @@
             capturedPhotos.push(photoCanvas.toDataURL('image/png'));
         }
 
-        // Render Grid Foto Individual + Tombol Retake SVG Bersih
         function renderIndividualPhotosGrid() {
             const gridContainer = document.getElementById('individual-photos-grid');
             gridContainer.innerHTML = '';
@@ -455,7 +466,6 @@
             renderStrip();
         }
 
-        // Manipulator Piksel Canvas Kompatibel 100% dengan iOS WebKit
         function applyCanvasPixelFilter(ctx, width, height, type) {
             if (type === 'normal') return;
             
@@ -545,7 +555,7 @@
             ctx.fillText(today, w / 2, h - 30);
         }
 
-        // Action Lanjutkan: Cetak Otomatis (Hidden) & QR Instant
+        // Action Lanjutkan: Set Preview, Cetak Otomatis & QR Code Standar Data URI
         function proceedToFinish() {
             clearInterval(retakeTimer);
             document.getElementById('screen-edit').classList.add('hidden');
@@ -553,28 +563,36 @@
 
             const finalImageSrc = finalCanvas.toDataURL('image/png');
 
-            // 1. Silent Print Latar Belakang (Jika diaktifkan Admin)
+            // Tampilkan Preview Foto di Layar Akhir
+            document.getElementById('final-preview-img').src = finalImageSrc;
+
+            // 1. Cetak Latar Belakang (Jika diaktifkan Admin)
             const autoPrint = document.getElementById('auto-print-setting').value;
             if (autoPrint === 'true') {
                 document.getElementById('print-image-target').src = finalImageSrc;
                 setTimeout(() => { window.print(); }, 300);
             }
 
-            // 2. Generate Instant QR Code via Local Object URL (Kompatibel iOS & Android)
+            // 2. Generate Universal Ultra-Light QR Data URI (Dapat Dibatasi dan Dibaca Semua HP/Kamera)
             const qrContainer = document.getElementById('qrcode-box');
             qrContainer.innerHTML = '';
 
-            finalCanvas.toBlob((blob) => {
-                const blobUrl = URL.createObjectURL(blob);
-                new QRCode(qrContainer, {
-                    text: blobUrl,
-                    width: 160,
-                    height: 160,
-                    colorDark: "#2C2A29",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.L
-                });
-            }, 'image/jpeg', 0.8);
+            // Buat Canvas Mini Khusus Data String QR
+            const miniCanvas = document.createElement('canvas');
+            miniCanvas.width = 180;
+            miniCanvas.height = 360;
+            const miniCtx = miniCanvas.getContext('2d');
+            miniCtx.drawImage(finalCanvas, 0, 0, 180, 360);
+            const ultraLightJpeg = miniCanvas.toDataURL('image/jpeg', 0.15);
+
+            new QRCode(qrContainer, {
+                text: ultraLightJpeg,
+                width: 160,
+                height: 160,
+                colorDark: "#2C2A29",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.L
+            });
         }
 
         function sendEmailBackup() {
@@ -593,7 +611,6 @@
             document.getElementById('screen-finish').classList.add('hidden');
             document.getElementById('screen-welcome').classList.remove('hidden');
             document.getElementById('btn-start-shoot').disabled = false;
-            document.getElementById('btn-start-shoot').innerText = "Mulai Foto Sesi";
             document.getElementById('custom-name-input').value = '';
             document.getElementById('email-status-text').classList.add('hidden');
         }
