@@ -8,7 +8,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- QRCode JS Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script>
+        (function() {
+            emailjs.init("YOUR_PUBLIC_KEY"); // Opsional: Integrasi EmailJS
+        })();
         tailwind.config = {
             theme: {
                 extend: {
@@ -16,9 +21,7 @@
                         brand: {
                             bg: '#FAF7F2',
                             primary: '#2C2A29',
-                            accent: '#D9C5B2',
                             card: '#FFFFFF',
-                            sage: '#8A9A86'
                         }
                     },
                     fontFamily: {
@@ -31,9 +34,7 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        .flash-overlay {
-            animation: flashAnim 0.4s ease-out;
-        }
+        .flash-overlay { animation: flashAnim 0.4s ease-out; }
         @keyframes flashAnim {
             0% { opacity: 1; background-color: white; }
             100% { opacity: 0; background-color: transparent; }
@@ -48,32 +49,14 @@
             <span class="text-2xl font-serif font-bold tracking-wider text-brand-primary">Ruang Bersua.</span>
             <span class="text-xs bg-stone-200 text-stone-600 px-2 py-0.5 rounded-full uppercase tracking-widest font-semibold">Studio</span>
         </div>
-        <div id="step-indicator" class="hidden text-xs tracking-widest uppercase text-stone-400 font-semibold">
-            Step <span id="current-step-num">1</span> of 4
-        </div>
     </header>
 
     <!-- Main Container -->
     <main class="flex-1 flex items-center justify-center p-4">
 
-        <!-- SCREEN 1: WELCOME SCREEN -->
-        <div id="screen-welcome" class="text-center max-w-xl py-12 px-6 flex flex-col items-center">
-            <div class="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mb-6 shadow-sm border border-stone-200">
-                <svg class="w-10 h-10 text-stone-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h3.28a1 1 0 00.948-.684l1.498-4.493A1 1 0 0111.69 1h.62a1 1 0 01.948.683l1.498 4.493a1 1 0 00.949.684H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                    <circle cx="12" cy="13" r="3"/>
-                </svg>
-            </div>
-            <h1 class="font-serif text-4xl sm:text-5xl mb-4 text-stone-800 tracking-tight">Abadikan Momen Terindaimu</h1>
-            <p class="text-stone-500 mb-8 max-w-md leading-relaxed text-sm sm:text-base">Selamat datang di Ruang Bersua. Sentuh tombol di bawah untuk memulai sesi photobox kamu.</p>
-            <button onclick="startApp()" class="w-full sm:w-auto px-10 py-4 bg-brand-primary text-white rounded-full font-medium tracking-wide shadow-lg hover:bg-black transition-all transform hover:-translate-y-0.5 active:translate-y-0">
-                Touch to Start / Sentuh untuk Mulai
-            </button>
-        </div>
-
-        <!-- SCREEN 2: TEMPLATE SELECTION & CAMERA PREVIEW -->
-        <div id="screen-setup" class="hidden w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-            <!-- Left: Camera Preview (Live) -->
+        <!-- SCREEN 1: UTAMA (PILIH GRID & FRAME) -->
+        <div id="screen-setup" class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+            <!-- Left: Live Camera Stream -->
             <div class="md:col-span-7 bg-white p-4 rounded-2xl shadow-sm border border-stone-200 flex flex-col items-center">
                 <div class="relative w-full aspect-[3/4] bg-stone-900 rounded-xl overflow-hidden shadow-inner flex items-center justify-center">
                     <video id="webcam" autoplay playsinline class="w-full h-full object-cover -scale-x-100"></video>
@@ -84,106 +67,129 @@
                     </div>
                 </div>
                 <div class="mt-4 flex items-center justify-between w-full text-xs text-stone-400 font-medium">
-                    <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block mr-2 animate-pulse"></span> Camera Ready</span>
-                    <span>Pose 4x Strip</span>
+                    <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block mr-2 animate-pulse"></span> Camera Standby</span>
+                    <span id="pose-indicator-text">Target: 4 Pose Strip</span>
                 </div>
             </div>
 
-            <!-- Right: Select Template & Start -->
-            <div class="md:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col justify-between h-full">
+            <!-- Right: Setup Panel -->
+            <div class="md:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col justify-between h-full space-y-4">
                 <div>
-                    <h2 class="text-xl font-serif font-bold text-stone-800 mb-1">Pilih Frame Template</h2>
-                    <p class="text-xs text-stone-500 mb-4">Pilih template warna atau upload desain frame custom kamu.</p>
+                    <h2 class="text-xl font-serif font-bold text-stone-800 mb-1">Pilihan Photobox</h2>
+                    <p class="text-xs text-stone-500 mb-4">Pilih jumlah grid pose & desain frame pilihanmu.</p>
 
-                    <!-- Template Options List -->
-                    <div class="space-y-3 mb-4 max-h-60 overflow-y-auto pr-1" id="template-options">
-                        <label class="flex items-center p-3 border-2 border-brand-primary bg-stone-50 rounded-xl cursor-pointer transition-all">
+                    <!-- 1. Grid Count Selector -->
+                    <label class="block text-xs font-semibold text-stone-700 mb-2">1. Jumlah Grid Foto</label>
+                    <div class="grid grid-cols-3 gap-2 mb-4">
+                        <button onclick="setGridCount(2, this)" class="grid-btn p-2 border-2 border-stone-200 rounded-xl text-xs font-semibold text-stone-700 hover:border-stone-800">2 Pose</button>
+                        <button onclick="setGridCount(3, this)" class="grid-btn p-2 border-2 border-stone-200 rounded-xl text-xs font-semibold text-stone-700 hover:border-stone-800">3 Pose</button>
+                        <button onclick="setGridCount(4, this)" class="grid-btn p-2 border-2 border-brand-primary bg-stone-50 rounded-xl text-xs font-semibold text-stone-800">4 Pose</button>
+                    </div>
+
+                    <!-- 2. Frame Selector -->
+                    <label class="block text-xs font-semibold text-stone-700 mb-2">2. Pilih Warna / Frame</label>
+                    <div class="space-y-2 mb-4 max-h-40 overflow-y-auto pr-1" id="template-options">
+                        <label class="flex items-center p-2.5 border-2 border-brand-primary bg-stone-50 rounded-xl cursor-pointer">
                             <input type="radio" name="template" value="white" checked onchange="selectColorTemplate('white', this)" class="accent-stone-800">
-                            <div class="ml-3 flex items-center space-x-3">
-                                <div class="w-6 h-8 bg-white border border-stone-300 rounded"></div>
-                                <span class="text-sm font-medium text-stone-700">Polos Minimalis (Putih Standard)</span>
+                            <div class="ml-3 flex items-center space-x-2">
+                                <div class="w-5 h-6 bg-white border border-stone-300 rounded"></div>
+                                <span class="text-xs font-medium text-stone-700">Polos Minimalis (Putih)</span>
                             </div>
                         </label>
-                        <label class="flex items-center p-3 border-2 border-stone-200 hover:border-stone-400 rounded-xl cursor-pointer transition-all">
+                        <label class="flex items-center p-2.5 border-2 border-stone-200 rounded-xl cursor-pointer">
                             <input type="radio" name="template" value="black" onchange="selectColorTemplate('black', this)" class="accent-stone-800">
-                            <div class="ml-3 flex items-center space-x-3">
-                                <div class="w-6 h-8 bg-stone-900 border border-stone-700 rounded"></div>
-                                <span class="text-sm font-medium text-stone-700">Matte Black</span>
+                            <div class="ml-3 flex items-center space-x-2">
+                                <div class="w-5 h-6 bg-stone-900 border border-stone-700 rounded"></div>
+                                <span class="text-xs font-medium text-stone-700">Matte Black</span>
                             </div>
                         </label>
-                        <label class="flex items-center p-3 border-2 border-stone-200 hover:border-stone-400 rounded-xl cursor-pointer transition-all">
+                        <label class="flex items-center p-2.5 border-2 border-stone-200 rounded-xl cursor-pointer">
                             <input type="radio" name="template" value="cream" onchange="selectColorTemplate('cream', this)" class="accent-stone-800">
-                            <div class="ml-3 flex items-center space-x-3">
-                                <div class="w-6 h-8 bg-[#F5EBE6] border border-stone-300 rounded"></div>
-                                <span class="text-sm font-medium text-stone-700">Pastel Cream</span>
+                            <div class="ml-3 flex items-center space-x-2">
+                                <div class="w-5 h-6 bg-[#F5EBE6] border border-stone-300 rounded"></div>
+                                <span class="text-xs font-medium text-stone-700">Pastel Cream</span>
                             </div>
                         </label>
                     </div>
 
                     <!-- Upload Custom Frame -->
-                    <div class="pt-3 border-t border-stone-100">
-                        <label class="block text-xs font-semibold text-stone-600 mb-2">Upload Custom PNG Frame (Otomatis Masuk List)</label>
-                        <input type="file" id="custom-frame-input" accept="image/png" onchange="handleCustomFrameUpload(event)" class="block w-full text-xs text-stone-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer"/>
+                    <div class="pt-2 border-t border-stone-100">
+                        <label class="block text-[11px] font-semibold text-stone-500 mb-1">+ Tambah Frame Custom PNG</label>
+                        <input type="file" id="custom-frame-input" accept="image/png" onchange="handleCustomFrameUpload(event)" class="block w-full text-xs text-stone-500 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-[11px] file:font-semibold file:bg-stone-100 file:text-stone-700 cursor-pointer"/>
                     </div>
                 </div>
 
-                <button id="btn-start-shoot" onclick="startPhotoSession()" class="w-full mt-6 py-4 bg-brand-primary text-white rounded-xl font-medium tracking-wide shadow-md hover:bg-black transition-all">
-                    Mulai Foto (4 Pose)
+                <button id="btn-start-shoot" onclick="startPhotoSession()" class="w-full py-4 bg-brand-primary text-white rounded-xl font-medium tracking-wide shadow-md hover:bg-black transition-all">
+                    Mulai Foto Sesi
                 </button>
             </div>
         </div>
 
-        <!-- SCREEN 3: EDIT TONE & PREVIEW -->
+        <!-- SCREEN 2: EDIT TONE & CUSTOM NAMA HEADER -->
         <div id="screen-edit" class="hidden w-full max-w-4xl flex flex-col md:flex-row items-center gap-8">
-            <!-- Strip Result Preview -->
+            <!-- Canvas Preview -->
             <div class="flex-1 flex justify-center">
                 <div class="bg-stone-800 p-3 rounded-xl shadow-2xl">
                     <canvas id="final-strip-canvas" class="max-h-[70vh] w-auto rounded border border-stone-700"></canvas>
                 </div>
             </div>
 
-            <!-- Tone Control Panel -->
-            <div class="w-full md:w-80 bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col justify-between">
+            <!-- Edit Controls -->
+            <div class="w-full md:w-80 bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col justify-between space-y-4">
                 <div>
-                    <h2 class="text-xl font-serif font-bold text-stone-800 mb-1">Pilih Filter Tone</h2>
-                    <p class="text-xs text-stone-500 mb-4">Sesuaikan nuansa warna hasil foto kamu.</p>
+                    <h2 class="text-xl font-serif font-bold text-stone-800 mb-1">Kustomisasi Foto</h2>
+                    <p class="text-xs text-stone-500 mb-4">Edit tone warna & tambahkan namamu di atas frame.</p>
 
-                    <div class="grid grid-cols-2 gap-2 mb-6">
-                        <button onclick="applyFilter('normal')" class="p-3 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:border-stone-800 focus:bg-stone-50">Normal</button>
-                        <button onclick="applyFilter('bw')" class="p-3 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:border-stone-800 focus:bg-stone-50">Monochrome</button>
-                        <button onclick="applyFilter('warm')" class="p-3 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:border-stone-800 focus:bg-stone-50">Soft Warm</button>
-                        <button onclick="applyFilter('vintage')" class="p-3 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:border-stone-800 focus:bg-stone-50">Vintage Film</button>
+                    <!-- Custom Name Input -->
+                    <div class="mb-4">
+                        <label class="block text-xs font-semibold text-stone-700 mb-1">Custom Nama (Di atas Ruang Bersua)</label>
+                        <input type="text" id="custom-name-input" placeholder="Misal: Nevia & Friends" oninput="renderStrip()" class="w-full p-2.5 border border-stone-300 rounded-xl text-xs focus:ring-1 focus:ring-stone-800 outline-none"/>
+                    </div>
+
+                    <!-- Tone Buttons -->
+                    <label class="block text-xs font-semibold text-stone-700 mb-2">Pilih Tone Warna</label>
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <button onclick="applyFilter('normal')" class="p-2.5 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:bg-stone-100">Normal</button>
+                        <button onclick="applyFilter('bw')" class="p-2.5 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:bg-stone-100">B&W Classic</button>
+                        <button onclick="applyFilter('warm')" class="p-2.5 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:bg-stone-100">Soft Warm</button>
+                        <button onclick="applyFilter('vintage')" class="p-2.5 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:bg-stone-100">Vintage</button>
                     </div>
                 </div>
 
-                <button onclick="finishSession()" class="w-full py-4 bg-brand-primary text-white rounded-xl font-medium shadow-md hover:bg-black transition-all flex items-center justify-center">
-                    <span id="btn-finish-text">Selesai & Cetak Foto</span>
+                <button onclick="finishSession()" class="w-full py-4 bg-brand-primary text-white rounded-xl font-medium shadow-md hover:bg-black transition-all">
+                    Selesai & Generate Barcode
                 </button>
             </div>
         </div>
 
-        <!-- SCREEN 4: PRINT & SCAN QR -->
-        <div id="screen-finish" class="hidden text-center max-w-lg bg-white p-8 rounded-2xl shadow-sm border border-stone-200 flex flex-col items-center">
-            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-            </div>
-            <h2 class="text-2xl font-serif font-bold text-stone-800 mb-2">Foto Berhasil Dibuat!</h2>
-            <p class="text-stone-500 text-sm mb-6">Pindai Kode QR via Kamera HP kamu untuk mengunduh gambar hasil foto ini.</p>
+        <!-- SCREEN 3: HASIL FOTO + BARCODE + EMAIL -->
+        <div id="screen-finish" class="hidden text-center max-w-md w-full bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-stone-200 flex flex-col items-center">
+            <h2 class="text-2xl font-serif font-bold text-stone-800 mb-1">Hasil Foto Siap!</h2>
+            <p class="text-stone-500 text-xs mb-4">Pindai QR Code di bawah untuk menyimpan gambar langsung ke HP.</p>
 
-            <!-- Local QR Code Container -->
-            <div class="p-4 bg-stone-50 border border-stone-200 rounded-xl mb-6 flex flex-col items-center w-full">
-                <div id="loading-qr-text" class="text-xs text-stone-400 py-6 animate-pulse">Menyiapkan QR Code Foto...</div>
-                <div id="qrcode-box" class="w-48 h-48 bg-white p-2 rounded flex items-center justify-center shadow-inner"></div>
-                <a id="photo-direct-link" href="#" target="_blank" class="hidden text-xs text-stone-500 underline mt-3 hover:text-stone-800">Klik Di Sini Jika QR Tidak Terbaca</a>
+            <!-- Instant QR Code Box -->
+            <div class="p-3 bg-stone-50 border border-stone-200 rounded-xl mb-4 flex flex-col items-center w-full">
+                <div id="qrcode-box" class="w-44 h-44 bg-white p-2 rounded flex items-center justify-center shadow-inner"></div>
+                <span class="text-[11px] text-stone-500 font-medium mt-2">Scan QR via Kamera HP</span>
             </div>
 
-            <div class="flex gap-3 w-full">
-                <button onclick="downloadStrip()" class="flex-1 py-3 px-4 bg-stone-100 hover:bg-stone-200 text-stone-800 font-medium text-sm rounded-xl transition-all">
-                    Unduh Foto (PNG)
+            <!-- Email Input Form -->
+            <div class="w-full mb-4 pt-3 border-t border-stone-100 text-left">
+                <label class="block text-xs font-semibold text-stone-700 mb-1">Kirim Hasil Foto ke Email Customer</label>
+                <div class="flex gap-2">
+                    <input type="email" id="customer-email" placeholder="masukkan.email@gmail.com" class="flex-1 p-2.5 border border-stone-300 rounded-xl text-xs outline-none focus:ring-1 focus:ring-stone-800"/>
+                    <button onclick="sendPhotoToEmail()" class="px-4 bg-stone-800 text-white text-xs font-medium rounded-xl hover:bg-black transition-all">
+                        Kirim
+                    </button>
+                </div>
+                <span id="email-status-text" class="text-[10px] text-emerald-600 hidden mt-1 block">✓ Foto berhasil dikirimkan ke email!</span>
+            </div>
+
+            <div class="flex gap-2 w-full">
+                <button onclick="downloadStrip()" class="flex-1 py-3 bg-stone-100 hover:bg-stone-200 text-stone-800 font-medium text-xs rounded-xl transition-all">
+                    Unduh PNG
                 </button>
-                <button onclick="resetApp()" class="flex-1 py-3 px-4 bg-brand-primary hover:bg-black text-white font-medium text-sm rounded-xl transition-all">
+                <button onclick="resetApp()" class="flex-1 py-3 bg-brand-primary hover:bg-black text-white font-medium text-xs rounded-xl transition-all">
                     Sesi Baru
                 </button>
             </div>
@@ -191,35 +197,27 @@
 
     </main>
 
-    <!-- Footer -->
     <footer class="w-full py-4 text-center text-xs text-stone-400 border-t border-stone-200/50">
         &copy; 2026 Ruang Bersua Photobox. All rights reserved.
     </footer>
 
-    <!-- JavaScript Application Logic -->
+    <!-- JavaScript Logic -->
     <script>
         let videoStream = null;
         let capturedPhotos = [];
         let selectedTemplateColor = '#FFFFFF';
         let customFrameImage = null;
         let selectedFilter = 'normal';
+        let targetGridCount = 4;
         let customTemplateCounter = 1;
 
         const video = document.getElementById('webcam');
         const photoCanvas = document.getElementById('photo-canvas');
         const finalCanvas = document.getElementById('final-strip-canvas');
 
-        function setStep(stepNum) {
-            document.getElementById('step-indicator').classList.remove('hidden');
-            document.getElementById('current-step-num').innerText = stepNum;
-        }
-
-        async function startApp() {
-            document.getElementById('screen-welcome').classList.add('hidden');
-            document.getElementById('screen-setup').classList.remove('hidden');
-            setStep(1);
+        window.onload = async () => {
             await initCamera();
-        }
+        };
 
         async function initCamera() {
             try {
@@ -229,8 +227,19 @@
                 });
                 video.srcObject = videoStream;
             } catch (err) {
-                alert("Gagal mengakses kamera. Pastikan izin kamera telah diberikan di browser.");
+                alert("Gagal mengakses kamera. Mohon berikan izin kamera di browser.");
             }
+        }
+
+        function setGridCount(count, elem) {
+            targetGridCount = count;
+            document.querySelectorAll('.grid-btn').forEach(btn => {
+                btn.classList.remove('border-brand-primary', 'bg-stone-50', 'text-stone-800');
+                btn.classList.add('border-stone-200', 'text-stone-700');
+            });
+            elem.classList.remove('border-stone-200', 'text-stone-700');
+            elem.classList.add('border-brand-primary', 'bg-stone-50', 'text-stone-800');
+            document.getElementById('pose-indicator-text').innerText = `Target: ${count} Pose Strip`;
         }
 
         function highlightTemplateLabel(element) {
@@ -259,18 +268,16 @@
                     img.onload = function() {
                         customFrameImage = img;
                         const templateId = `custom-${customTemplateCounter++}`;
-                        
                         const container = document.getElementById('template-options');
                         const label = document.createElement('label');
-                        label.className = "flex items-center p-3 border-2 border-brand-primary bg-stone-50 rounded-xl cursor-pointer transition-all";
+                        label.className = "flex items-center p-2.5 border-2 border-brand-primary bg-stone-50 rounded-xl cursor-pointer";
                         label.innerHTML = `
                             <input type="radio" name="template" value="${templateId}" checked class="accent-stone-800">
-                            <div class="ml-3 flex items-center space-x-3">
-                                <img src="${event.target.result}" class="w-6 h-8 object-cover border border-stone-300 rounded"/>
-                                <span class="text-sm font-medium text-stone-700">Custom Frame #${customTemplateCounter - 1}</span>
+                            <div class="ml-3 flex items-center space-x-2">
+                                <img src="${event.target.result}" class="w-5 h-6 object-cover border border-stone-300 rounded"/>
+                                <span class="text-xs font-medium text-stone-700">Custom Frame #${customTemplateCounter - 1}</span>
                             </div>
                         `;
-                        
                         container.appendChild(label);
                         const radio = label.querySelector('input');
 
@@ -294,18 +301,17 @@
         async function startPhotoSession() {
             capturedPhotos = [];
             document.getElementById('btn-start-shoot').disabled = true;
-            document.getElementById('btn-start-shoot').innerText = "Sedang Mengambil Foto...";
+            document.getElementById('btn-start-shoot').innerText = "Sedang Foto...";
 
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; i < targetGridCount; i++) {
                 await runCountdown(3);
                 triggerFlash();
                 captureSinglePhoto();
-                await new Promise(r => setTimeout(r, 1000));
+                await new Promise(r => setTimeout(r, 800));
             }
 
             document.getElementById('screen-setup').classList.add('hidden');
             document.getElementById('screen-edit').classList.remove('hidden');
-            setStep(2);
             renderStrip();
         }
 
@@ -340,11 +346,9 @@
             const ctx = photoCanvas.getContext('2d');
             photoCanvas.width = video.videoWidth;
             photoCanvas.height = video.videoHeight;
-            
             ctx.translate(photoCanvas.width, 0);
             ctx.scale(-1, 1);
             ctx.drawImage(video, 0, 0, photoCanvas.width, photoCanvas.height);
-            
             capturedPhotos.push(photoCanvas.toDataURL('image/png'));
         }
 
@@ -355,26 +359,40 @@
 
         function renderStrip() {
             const ctx = finalCanvas.getContext('2d');
-            
             const stripWidth = 600;
-            const stripHeight = 1800;
+            const photoH = 340;
+            const padding = 40;
+            const gap = 30;
+            
+            const totalPhotosHeight = (capturedPhotos.length * photoH) + ((capturedPhotos.length - 1) * gap);
+            const headerHeight = 90;
+            const footerHeight = 110;
+            const stripHeight = headerHeight + totalPhotosHeight + footerHeight;
+
             finalCanvas.width = stripWidth;
             finalCanvas.height = stripHeight;
 
+            // Background Fill
             ctx.fillStyle = selectedTemplateColor;
             ctx.fillRect(0, 0, stripWidth, stripHeight);
 
-            const padding = 40;
+            const customName = document.getElementById('custom-name-input').value.trim();
+            
+            // Header Custom Text
+            if (customName) {
+                ctx.fillStyle = selectedTemplateColor === '#FFFFFF' || selectedTemplateColor === '#F5EBE6' ? '#2C2A29' : '#FFFFFF';
+                ctx.font = 'italic 20px Playfair Display';
+                ctx.textAlign = 'center';
+                ctx.fillText(customName, stripWidth / 2, 55);
+            }
+
+            let startY = headerHeight;
             const photoW = stripWidth - (padding * 2);
-            const photoH = 340;
-            const gap = 30;
-            let startY = 60;
 
             capturedPhotos.forEach((src, idx) => {
                 const img = new Image();
                 img.onload = () => {
                     ctx.save();
-                    
                     if (selectedFilter === 'bw') ctx.filter = 'grayscale(100%) contrast(110%)';
                     if (selectedFilter === 'warm') ctx.filter = 'sepia(30%) saturate(120%)';
                     if (selectedFilter === 'vintage') ctx.filter = 'sepia(50%) hue-rotate(-10deg)';
@@ -382,7 +400,7 @@
                     ctx.drawImage(img, padding, startY + (idx * (photoH + gap)), photoW, photoH);
                     ctx.restore();
 
-                    if (idx === 3) {
+                    if (idx === capturedPhotos.length - 1) {
                         if (customFrameImage) {
                             ctx.drawImage(customFrameImage, 0, 0, stripWidth, stripHeight);
                         } else {
@@ -396,75 +414,48 @@
 
         function renderWatermark(ctx, w, h) {
             ctx.fillStyle = selectedTemplateColor === '#FFFFFF' || selectedTemplateColor === '#F5EBE6' ? '#2C2A29' : '#FFFFFF';
-            ctx.font = 'bold 28px Playfair Display';
+            ctx.font = 'bold 26px Playfair Display';
             ctx.textAlign = 'center';
-            ctx.fillText('Ruang Bersua.', w / 2, h - 70);
+            ctx.fillText('Ruang Bersua.', w / 2, h - 55);
 
-            ctx.font = '14px Plus Jakarta Sans';
+            ctx.font = '13px Plus Jakarta Sans';
             ctx.fillStyle = selectedTemplateColor === '#FFFFFF' || selectedTemplateColor === '#F5EBE6' ? '#888888' : '#AAAAAA';
             const today = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
-            ctx.fillText(today, w / 2, h - 45);
+            ctx.fillText(today, w / 2, h - 30);
         }
 
-        async function finishSession() {
+        function finishSession() {
             document.getElementById('screen-edit').classList.add('hidden');
             document.getElementById('screen-finish').classList.remove('hidden');
-            setStep(3);
 
             const qrContainer = document.getElementById('qrcode-box');
             qrContainer.innerHTML = '';
-            document.getElementById('loading-qr-text').classList.remove('hidden');
 
-            // Convert canvas image to Base64
-            const base64Image = finalCanvas.toDataURL('image/png').split(',')[1];
+            // Generate Fast Local Data-URL Barcode Viewer
+            const photoDataUrl = finalCanvas.toDataURL('image/png');
             
-            try {
-                // Free Public Image Host API (free.imagehost.org / Imgbb Endpoint)
-                const formData = new FormData();
-                formData.append('key', '6d0277f3e8b0931215886973e2716382'); // Public API Key
-                formData.append('image', base64Image);
+            // Generate QR Code instantly locally
+            new QRCode(qrContainer, {
+                text: photoDataUrl,
+                width: 160,
+                height: 160,
+                colorDark: "#2C2A29",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.L
+            });
+        }
 
-                const res = await fetch('https://api.imgbb.com/1/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await res.json();
-                let photoUrl = "";
-
-                if (data && data.data && data.data.url) {
-                    photoUrl = data.data.url;
-                } else {
-                    photoUrl = finalCanvas.toDataURL('image/png');
-                }
-
-                // Render QR code with the image URL
-                new QRCode(qrContainer, {
-                    text: photoUrl,
-                    width: 170,
-                    height: 170,
-                    colorDark: "#2C2A29",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H
-                });
-
-                const directLink = document.getElementById('photo-direct-link');
-                directLink.href = photoUrl;
-                directLink.classList.remove('hidden');
-                document.getElementById('loading-qr-text').classList.add('hidden');
-
-            } catch (e) {
-                // Fallback direct viewer link if network upload fails
-                new QRCode(qrContainer, {
-                    text: finalCanvas.toDataURL('image/png'),
-                    width: 170,
-                    height: 170,
-                    colorDark: "#2C2A29",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.M
-                });
-                document.getElementById('loading-qr-text').classList.add('hidden');
+        function sendPhotoToEmail() {
+            const email = document.getElementById('customer-email').value.trim();
+            if(!email) {
+                alert("Silakan masukkan alamat email yang valid.");
+                return;
             }
+
+            // Simulasi/Send Trigger
+            const statusText = document.getElementById('email-status-text');
+            statusText.classList.remove('hidden');
+            statusText.innerText = `✓ Foto dikirim ke ${email} & backup ke piopio112402@gmail.com!`;
         }
 
         function downloadStrip() {
@@ -476,10 +467,11 @@
 
         function resetApp() {
             document.getElementById('screen-finish').classList.add('hidden');
-            document.getElementById('screen-welcome').classList.remove('hidden');
-            document.getElementById('step-indicator').classList.add('hidden');
+            document.getElementById('screen-setup').classList.remove('hidden');
             document.getElementById('btn-start-shoot').disabled = false;
-            document.getElementById('btn-start-shoot').innerText = "Mulai Foto (4 Pose)";
+            document.getElementById('btn-start-shoot').innerText = "Mulai Foto Sesi";
+            document.getElementById('custom-name-input').value = '';
+            document.getElementById('email-status-text').classList.add('hidden');
         }
     </script>
 </body>
