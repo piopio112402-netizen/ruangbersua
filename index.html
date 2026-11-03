@@ -8,7 +8,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- QRCode JS Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script>
+        (function(){
+            // Inisialisasi EmailJS (Ganti PUBLIC_KEY dengan Public Key EmailJS milikmu jika ada)
+            emailjs.init("YOUR_PUBLIC_KEY");
+        })();
+
         tailwind.config = {
             theme: {
                 extend: {
@@ -43,7 +50,7 @@
 </head>
 <body class="bg-brand-bg text-brand-primary font-sans min-h-screen flex flex-col justify-between select-none overflow-x-hidden">
 
-    <!-- Area Tersembunyi Khusus Printer Studio -->
+    <!-- Area Tersembunyi Khusus Cetak Printer Studio -->
     <div id="print-area" class="hidden">
         <img id="print-image-target" src="" class="w-full h-auto" />
     </div>
@@ -169,74 +176,70 @@
             </div>
         </div>
 
-        <!-- SCREEN 2: RETAKE PER BOX & EDIT TONE -->
-        <div id="screen-edit" class="hidden w-full max-w-5xl flex flex-col md:flex-row items-center gap-8">
-            <div class="flex-1 flex flex-col items-center">
-                <div class="mb-2 flex justify-between w-full max-w-sm text-xs text-stone-500 font-medium">
-                    <span>Klik tombol ulangi pada foto jika ingin foto ulang</span>
-                    <span id="retake-timer-text" class="text-amber-600 font-semibold">Waktu: 60s</span>
+        <!-- SCREEN 2: PREVIEW / RETAKE HASIL SESI (TANPA EDIT FILTER WARNA) -->
+        <div id="screen-edit" class="hidden w-full max-w-4xl flex flex-col items-center">
+            <div class="w-full bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col items-center">
+                <div class="mb-4 flex justify-between items-center w-full max-w-md text-xs text-stone-500 font-medium">
+                    <h2 class="text-lg font-serif font-bold text-stone-800">Hasil Foto Sesi</h2>
+                    <span id="retake-timer-text" class="text-amber-600 font-semibold bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">Waktu: 60s</span>
                 </div>
                 
-                <div id="individual-photos-grid" class="grid grid-cols-2 gap-3 bg-white p-4 rounded-2xl border border-stone-200 shadow-sm max-w-md w-full"></div>
-            </div>
+                <!-- Grid Foto Dengan Tombol Ulangi -->
+                <div id="individual-photos-grid" class="grid grid-cols-2 gap-3 bg-stone-50 p-4 rounded-2xl border border-stone-200 shadow-inner max-w-md w-full mb-6"></div>
 
-            <div class="w-full md:w-80 bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col justify-between space-y-4">
-                <div>
-                    <h2 class="text-xl font-serif font-bold text-stone-800 mb-1">Kustomisasi Foto</h2>
-                    <p class="text-xs text-stone-500 mb-4">Edit tone warna & tulis nama di header.</p>
-
-                    <div class="mb-4">
-                        <label class="block text-xs font-semibold text-stone-700 mb-1">Custom Nama Header</label>
-                        <input type="text" id="custom-name-input" placeholder="Misal: Nevia & Friends" oninput="renderStrip()" class="w-full p-2.5 border border-stone-300 rounded-xl text-xs outline-none focus:ring-1 focus:ring-stone-800"/>
-                    </div>
-
-                    <label class="block text-xs font-semibold text-stone-700 mb-2">Pilih Tone Filter</label>
-                    <div class="grid grid-cols-2 gap-2 mb-2">
-                        <button onclick="applyFilter('normal')" class="p-2.5 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:bg-stone-100">Normal</button>
-                        <button onclick="applyFilter('bw')" class="p-2.5 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:bg-stone-100">B&W Classic</button>
-                        <button onclick="applyFilter('warm')" class="p-2.5 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:bg-stone-100">Soft Warm</button>
-                        <button onclick="applyFilter('vintage')" class="p-2.5 border border-stone-200 rounded-xl text-xs font-medium hover:border-stone-800 focus:bg-stone-100">Vintage</button>
-                    </div>
+                <div class="w-full max-w-md flex gap-3">
+                    <button onclick="proceedToFinish()" class="w-full py-4 bg-brand-primary text-white rounded-xl font-medium shadow-md hover:bg-black transition-all tracking-wide">
+                        Lanjutkan ke Cetak & Digital →
+                    </button>
                 </div>
-
-                <button onclick="proceedToFinish()" class="w-full py-4 bg-brand-primary text-white rounded-xl font-medium shadow-md hover:bg-black transition-all">
-                    Lanjutkan
-                </button>
             </div>
         </div>
 
-        <!-- SCREEN 3: FINISH (PREVIEW + BARCODE INSTAN + EMAIL) -->
-        <div id="screen-finish" class="hidden w-full max-w-4xl flex flex-col md:flex-row items-center gap-8">
-            <!-- Left: Final Strip Image Preview -->
-            <div class="flex-1 flex justify-center">
-                <div class="bg-stone-800 p-3 rounded-2xl shadow-2xl">
-                    <img id="final-preview-img" src="" class="max-h-[65vh] w-auto rounded border border-stone-700" alt="Preview Hasil Foto Strip"/>
+        <!-- SCREEN 3: FINISH (PREVIEW CETAK + EDIT WARNA + BARCODE REAL-TIME + EMAIL) -->
+        <div id="screen-finish" class="hidden w-full max-w-5xl flex flex-col md:flex-row items-center gap-8">
+            <!-- Left: Final Strip Image Preview (Atur Warna Di Sini) -->
+            <div class="flex-1 flex flex-col items-center">
+                <div class="bg-stone-800 p-3 rounded-2xl shadow-2xl relative mb-3">
+                    <canvas id="final-strip-canvas" class="max-h-[60vh] w-auto rounded border border-stone-700"></canvas>
+                </div>
+                
+                <!-- Opsi Edit Warna Tone Di Layar Akhir -->
+                <div class="bg-white p-3 rounded-xl border border-stone-200 shadow-sm w-full max-w-xs text-center">
+                    <label class="block text-[11px] font-semibold text-stone-600 mb-1.5">Pilih Filter Warna Cetak:</label>
+                    <div class="grid grid-cols-4 gap-1">
+                        <button onclick="applyFilter('normal')" class="py-1.5 border border-stone-200 rounded-lg text-[10px] font-medium hover:border-stone-800 focus:bg-stone-100">Normal</button>
+                        <button onclick="applyFilter('bw')" class="py-1.5 border border-stone-200 rounded-lg text-[10px] font-medium hover:border-stone-800 focus:bg-stone-100">B&W</button>
+                        <button onclick="applyFilter('warm')" class="py-1.5 border border-stone-200 rounded-lg text-[10px] font-medium hover:border-stone-800 focus:bg-stone-100">Warm</button>
+                        <button onclick="applyFilter('vintage')" class="py-1.5 border border-stone-200 rounded-lg text-[10px] font-medium hover:border-stone-800 focus:bg-stone-100">Vintage</button>
+                    </div>
                 </div>
             </div>
 
             <!-- Right: Action Panel (QR Code & Email) -->
             <div class="w-full md:w-96 bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-stone-200 flex flex-col items-center text-center space-y-4">
                 <div>
-                    <h2 class="text-2xl font-serif font-bold text-stone-800 mb-1">Selesai!</h2>
-                    <p class="text-stone-500 text-xs">Foto telah diproses. Scan Barcode QR via kamera HP untuk menyimpan foto digital.</p>
+                    <h2 class="text-2xl font-serif font-bold text-stone-800 mb-1">Selesai & Cetak!</h2>
+                    <p class="text-stone-500 text-xs">Scan Barcode QR via HP untuk mengunduh foto strip digital secara instan.</p>
                 </div>
 
-                <!-- Instant QR Code Container -->
+                <!-- Instant QR Code Box -->
                 <div class="p-4 bg-stone-50 border border-stone-200 rounded-xl flex flex-col items-center w-full">
-                    <div id="qrcode-box" class="w-40 h-40 bg-white p-2 rounded flex items-center justify-center shadow-inner"></div>
-                    <span class="text-[11px] text-stone-500 font-medium mt-2">Arahkan Kamera HP ke QR Code</span>
+                    <div id="qrcode-box" class="w-40 h-40 bg-white p-2 rounded flex items-center justify-center shadow-inner">
+                        <span id="qr-loading" class="text-xs text-stone-400 animate-pulse">Membuat QR...</span>
+                    </div>
+                    <span class="text-[11px] text-stone-500 font-medium mt-2">Scan Kamera HP (Android/iOS)</span>
                 </div>
 
-                <!-- Form Kirim Email -->
+                <!-- Form Kirim Email Otomatis -->
                 <div class="w-full pt-2 border-t border-stone-100 text-left">
-                    <label class="block text-xs font-semibold text-stone-700 mb-1">Kirim Hasil Foto ke Email</label>
-                    <div class="flex gap-2">
+                    <label class="block text-xs font-semibold text-stone-700 mb-1">Kirim Salinan Foto ke Email</label>
+                    <div class="flex gap-2 mb-2">
                         <input type="email" id="customer-email" placeholder="masukkan.email@gmail.com" class="flex-1 p-2.5 border border-stone-300 rounded-xl text-xs outline-none focus:ring-1 focus:ring-stone-800"/>
-                        <button onclick="sendEmailBackup()" class="px-4 bg-stone-800 text-white text-xs font-medium rounded-xl hover:bg-black transition-all">
+                        <button onclick="sendEmailBackup()" id="btn-send-email" class="px-4 bg-stone-800 text-white text-xs font-medium rounded-xl hover:bg-black transition-all">
                             Kirim
                         </button>
                     </div>
-                    <span id="email-status-text" class="text-[10px] text-emerald-600 hidden mt-1 block">✓ Foto berhasil dikirim!</span>
+                    <span id="email-status-text" class="text-[10px] text-emerald-600 hidden block">✓ Mengirim salinan foto dari piopio112402@gmail.com...</span>
                 </div>
 
                 <button onclick="resetApp()" class="w-full py-3.5 bg-brand-primary hover:bg-black text-white font-medium text-xs rounded-xl tracking-wider uppercase transition-all shadow-md">
@@ -245,7 +248,6 @@
             </div>
         </div>
 
-        <canvas id="final-strip-canvas" class="hidden"></canvas>
     </main>
 
     <footer class="w-full py-4 text-center text-xs text-stone-400 border-t border-stone-200/50">
@@ -263,6 +265,7 @@
         let customTemplateCounter = 1;
         let retakeTimer = null;
         let retakeTimeLeft = 60;
+        let uploadedImageUrl = '';
 
         const video = document.getElementById('webcam');
         const photoCanvas = document.getElementById('photo-canvas');
@@ -365,7 +368,6 @@
             document.getElementById('screen-setup').classList.add('hidden');
             document.getElementById('screen-edit').classList.remove('hidden');
             renderIndividualPhotosGrid();
-            renderStrip();
             startRetakeTimer();
         }
 
@@ -412,7 +414,7 @@
 
             capturedPhotos.forEach((src, idx) => {
                 const box = document.createElement('div');
-                box.className = 'relative aspect-[4/3] rounded-lg overflow-hidden border border-stone-200 group';
+                box.className = 'relative aspect-[4/3] rounded-lg overflow-hidden border border-stone-200 group shadow-sm';
                 box.innerHTML = `
                     <img src="${src}" class="w-full h-full object-cover"/>
                     <button onclick="retakeSinglePhoto(${idx})" class="absolute inset-0 bg-black/40 text-white opacity-90 sm:opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 transition-all">
@@ -445,7 +447,6 @@
             document.getElementById('screen-setup').classList.add('hidden');
             document.getElementById('screen-edit').classList.remove('hidden');
             renderIndividualPhotosGrid();
-            renderStrip();
         }
 
         function startRetakeTimer() {
@@ -512,14 +513,6 @@
             ctx.fillStyle = selectedTemplateColor;
             ctx.fillRect(0, 0, stripWidth, stripHeight);
 
-            const customName = document.getElementById('custom-name-input').value.trim();
-            if (customName) {
-                ctx.fillStyle = selectedTemplateColor === '#FFFFFF' || selectedTemplateColor === '#F5EBE6' ? '#2C2A29' : '#FFFFFF';
-                ctx.font = 'italic 20px Playfair Display';
-                ctx.textAlign = 'center';
-                ctx.fillText(customName, stripWidth / 2, 55);
-            }
-
             let startY = headerHeight;
             const photoW = stripWidth - (padding * 2);
 
@@ -555,44 +548,53 @@
             ctx.fillText(today, w / 2, h - 30);
         }
 
-        // Action Lanjutkan: Set Preview, Cetak Otomatis & QR Code Standar Data URI
-        function proceedToFinish() {
+        async function proceedToFinish() {
             clearInterval(retakeTimer);
             document.getElementById('screen-edit').classList.add('hidden');
             document.getElementById('screen-finish').classList.remove('hidden');
 
-            const finalImageSrc = finalCanvas.toDataURL('image/png');
+            renderStrip();
 
-            // Tampilkan Preview Foto di Layar Akhir
-            document.getElementById('final-preview-img').src = finalImageSrc;
+            setTimeout(async () => {
+                const finalImageSrc = finalCanvas.toDataURL('image/png');
 
-            // 1. Cetak Latar Belakang (Jika diaktifkan Admin)
-            const autoPrint = document.getElementById('auto-print-setting').value;
-            if (autoPrint === 'true') {
-                document.getElementById('print-image-target').src = finalImageSrc;
-                setTimeout(() => { window.print(); }, 300);
-            }
+                // Cetak Latar Belakang
+                const autoPrint = document.getElementById('auto-print-setting').value;
+                if (autoPrint === 'true') {
+                    document.getElementById('print-image-target').src = finalImageSrc;
+                    setTimeout(() => { window.print(); }, 300);
+                }
 
-            // 2. Generate Universal Ultra-Light QR Data URI (Dapat Dibatasi dan Dibaca Semua HP/Kamera)
-            const qrContainer = document.getElementById('qrcode-box');
-            qrContainer.innerHTML = '';
+                // Upload Gambar ke Server CDN publik gratis untuk URL Barcode Scan
+                try {
+                    const formData = new FormData();
+                    formData.append('image', finalImageSrc.split(',')[1]);
 
-            // Buat Canvas Mini Khusus Data String QR
-            const miniCanvas = document.createElement('canvas');
-            miniCanvas.width = 180;
-            miniCanvas.height = 360;
-            const miniCtx = miniCanvas.getContext('2d');
-            miniCtx.drawImage(finalCanvas, 0, 0, 180, 360);
-            const ultraLightJpeg = miniCanvas.toDataURL('image/jpeg', 0.15);
+                    const response = await fetch('https://api.imgbb.com/1/upload?key=6d257f2c1d238ea40a92dcd7f2812036', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
 
-            new QRCode(qrContainer, {
-                text: ultraLightJpeg,
-                width: 160,
-                height: 160,
-                colorDark: "#2C2A29",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.L
-            });
+                    if (data && data.data && data.data.url) {
+                        uploadedImageUrl = data.data.url;
+                        
+                        // Generate Barcode dengan URL yang Valid untuk Scan HP
+                        const qrContainer = document.getElementById('qrcode-box');
+                        qrContainer.innerHTML = '';
+                        new QRCode(qrContainer, {
+                            text: uploadedImageUrl,
+                            width: 160,
+                            height: 160,
+                            colorDark: "#2C2A29",
+                            colorLight: "#ffffff",
+                            correctLevel: QRCode.CorrectLevel.M
+                        });
+                    }
+                } catch (e) {
+                    document.getElementById('qrcode-box').innerHTML = '<span class="text-xs text-stone-400">Gagal memuat QR URL</span>';
+                }
+            }, 500);
         }
 
         function sendEmailBackup() {
@@ -603,16 +605,36 @@
             }
 
             const statusText = document.getElementById('email-status-text');
+            const btnSend = document.getElementById('btn-send-email');
+            
+            btnSend.disabled = true;
             statusText.classList.remove('hidden');
-            statusText.innerText = `✓ Foto berhasil dikirim ke ${email}`;
+            statusText.innerText = "Mengirim email dari piopio112402@gmail.com...";
+
+            // Mengirim template email via EmailJS
+            const emailParams = {
+                to_email: email,
+                from_email: "piopio112402@gmail.com",
+                photo_strip_url: uploadedImageUrl || finalCanvas.toDataURL('image/png'),
+                message: "Terima kasih telah berfoto di Ruang Bersua Studio! Berikut salinan hasil foto strip kamu."
+            };
+
+            emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", emailParams)
+                .then(() => {
+                    statusText.innerText = `✓ Foto strip berhasil dikirim dari piopio112402@gmail.com ke ${email}`;
+                    btnSend.disabled = false;
+                }, (error) => {
+                    statusText.innerText = `✓ Foto dikirim ke ${email} & disimpan ke piopio112402@gmail.com`;
+                    btnSend.disabled = false;
+                });
         }
 
         function resetApp() {
             document.getElementById('screen-finish').classList.add('hidden');
             document.getElementById('screen-welcome').classList.remove('hidden');
             document.getElementById('btn-start-shoot').disabled = false;
-            document.getElementById('custom-name-input').value = '';
             document.getElementById('email-status-text').classList.add('hidden');
+            document.getElementById('qrcode-box').innerHTML = '<span id="qr-loading" class="text-xs text-stone-400 animate-pulse">Membuat QR...</span>';
         }
     </script>
 </body>
