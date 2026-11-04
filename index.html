@@ -8,15 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- QRCode JS Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <!-- GIF Encoder JS -->
-    <script src="https://cdn.jsdelivr.net/npm/gifshot@0.3.2/dist/gifshot.min.js"></script>
-    <!-- EmailJS SDK -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <!-- GIF JS Library for GIF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     <script>
-        (function(){
-            emailjs.init("YOUR_PUBLIC_KEY");
-        })();
-
         tailwind.config = {
             theme: {
                 extend: {
@@ -43,9 +37,22 @@
             100% { opacity: 0; background-color: transparent; }
         }
         @media print {
-            body * { visibility: hidden; }
-            #print-area, #print-area * { visibility: visible; }
-            #print-area { position: absolute; left: 0; top: 0; width: 100%; }
+            body * { visibility: hidden !important; }
+            #print-area, #print-area * { visibility: visible !important; }
+            #print-area { 
+                position: fixed; 
+                left: 0; 
+                top: 0; 
+                width: 4in; 
+                height: 6in; 
+                margin: 0; 
+                padding: 0;
+            }
+            #print-image-target {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }
         }
         .draggable-box {
             position: absolute;
@@ -59,9 +66,9 @@
 </head>
 <body class="bg-brand-bg text-brand-primary font-sans min-h-screen flex flex-col justify-between select-none overflow-x-hidden">
 
-    <!-- Area Tersembunyi Khusus Printer Studio -->
+    <!-- Area Khusus Cetak Printer Canon CP1500 (4x6 Inch) -->
     <div id="print-area" class="hidden">
-        <img id="print-image-target" src="" class="w-full h-auto" />
+        <img id="print-image-target" src="" class="w-full h-full object-contain" />
     </div>
 
     <!-- Header Navigation -->
@@ -104,23 +111,14 @@
 
                 <!-- Editor Geser Kotak Foto Frame -->
                 <div id="frame-editor-container" class="hidden border rounded-xl p-3 bg-stone-50">
-                    <label class="block text-xs font-semibold text-stone-700 mb-2">2. Geser / Sesuaikan Kotak Merah Tempat Foto:</label>
+                    <label class="block text-xs font-semibold text-stone-700 mb-2">2. Geser / Sesuaikan 4 Kotak Merah Tempat Foto:</label>
                     <div id="editor-canvas-wrapper" class="relative w-full max-w-[240px] mx-auto border bg-white overflow-hidden rounded shadow-sm">
                         <img id="editor-frame-img" src="" class="w-full h-auto block select-none pointer-events-none"/>
-                        <!-- 4 Interactive Boxes -->
                         <div id="box-0" class="draggable-box" style="top: 8%; left: 8%; width: 84%; height: 19%;"></div>
                         <div id="box-1" class="draggable-box" style="top: 29%; left: 8%; width: 84%; height: 19%;"></div>
                         <div id="box-2" class="draggable-box" style="top: 50%; left: 8%; width: 84%; height: 19%;"></div>
                         <div id="box-3" class="draggable-box" style="top: 71%; left: 8%; width: 84%; height: 19%;"></div>
                     </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-stone-700 mb-1">Status Cetak Otomatis (Printer):</label>
-                    <select id="auto-print-setting" class="w-full p-2 border border-stone-300 rounded-xl text-xs outline-none">
-                        <option value="true" selected>Aktif (Otomatis Cetak Latar Belakang)</option>
-                        <option value="false">Nonaktif (Hanya Digital)</option>
-                    </select>
                 </div>
 
                 <button onclick="saveAdminFrameConfig()" class="w-full py-2.5 bg-stone-800 text-white text-xs rounded-xl font-medium hover:bg-black transition-all">Simpan Frame & Pengaturan</button>
@@ -140,11 +138,11 @@
             </button>
         </div>
 
-        <!-- SCREEN 1: KAMERA & PILIHAN FRAME DI BAWAH -->
-        <div id="screen-setup" class="hidden w-full max-w-3xl flex flex-col items-center space-y-6">
-            <!-- Kamera Utama -->
-            <div class="bg-white p-4 rounded-3xl shadow-sm border border-stone-200 w-full flex flex-col items-center">
-                <div class="relative w-full aspect-[4/3] max-w-2xl bg-stone-900 rounded-2xl overflow-hidden shadow-inner flex items-center justify-center">
+        <!-- SCREEN 1: PILIH FRAME BAWAH KAMERA -->
+        <div id="screen-setup" class="hidden w-full max-w-2xl flex flex-col items-center gap-6">
+            <!-- Kamera Atas -->
+            <div class="w-full bg-white p-4 rounded-2xl shadow-sm border border-stone-200 flex flex-col items-center">
+                <div class="relative w-full aspect-[4/3] max-w-xl bg-stone-900 rounded-xl overflow-hidden shadow-inner flex items-center justify-center">
                     <video id="webcam" autoplay playsinline class="w-full h-full object-cover -scale-x-100"></video>
                     <canvas id="photo-canvas" class="hidden"></canvas>
                     <div id="flash" class="absolute inset-0 pointer-events-none z-30"></div>
@@ -154,128 +152,102 @@
                 </div>
             </div>
 
-            <!-- Pilihan Frame Di Bawah Kamera -->
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-stone-200 w-full">
-                <div class="flex justify-between items-center mb-4">
-                    <div>
-                        <h3 class="text-base font-serif font-bold text-stone-800">Pilih Frame Foto</h3>
-                        <p class="text-xs text-stone-400">Jumlah pose foto akan menyesuaikan bingkai yang kamu pilih.</p>
+            <!-- Pilihan Frame Bawah Kamera -->
+            <div class="w-full bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col space-y-4">
+                <div>
+                    <h2 class="text-lg font-serif font-bold text-stone-800 mb-1">Pilih Frame Template</h2>
+                    <p class="text-xs text-stone-500 mb-3">Klik bingkai pilihanmu di bawah ini.</p>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="template-options">
+                        <button onclick="selectColorTemplate('white', this)" class="template-btn p-3 border-2 border-brand-primary bg-stone-50 rounded-xl flex items-center space-x-3 transition-all">
+                            <div class="w-5 h-7 bg-white border border-stone-300 rounded shadow-sm"></div>
+                            <span class="text-xs font-semibold text-stone-700">Polos Putih</span>
+                        </button>
+                        <button onclick="selectColorTemplate('black', this)" class="template-btn p-3 border-2 border-stone-200 rounded-xl flex items-center space-x-3 transition-all">
+                            <div class="w-5 h-7 bg-stone-900 border border-stone-700 rounded shadow-sm"></div>
+                            <span class="text-xs font-semibold text-stone-700">Matte Black</span>
+                        </button>
+                        <button onclick="selectColorTemplate('cream', this)" class="template-btn p-3 border-2 border-stone-200 rounded-xl flex items-center space-x-3 transition-all">
+                            <div class="w-5 h-7 bg-[#F5EBE6] border border-stone-300 rounded shadow-sm"></div>
+                            <span class="text-xs font-semibold text-stone-700">Pastel Cream</span>
+                        </button>
                     </div>
-                    <span id="frame-pose-info" class="text-xs bg-stone-100 text-stone-700 px-3 py-1 rounded-full font-semibold border">4 Pose Photo</span>
                 </div>
 
-                <!-- Katalog Frame Horizontal / Grid -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="template-options">
-                    <label class="frame-card flex flex-col items-center p-3 border-2 border-brand-primary bg-stone-50 rounded-2xl cursor-pointer transition-all">
-                        <input type="radio" name="template" value="white" checked onchange="selectColorTemplate('white', this)" class="hidden">
-                        <div class="w-full aspect-[1/2] max-h-24 bg-white border border-stone-300 rounded-lg mb-2 shadow-sm flex items-center justify-center">
-                            <span class="text-[10px] text-stone-400 font-serif">Putih</span>
-                        </div>
-                        <span class="text-xs font-semibold text-stone-700">Polos Putih</span>
-                    </label>
-
-                    <label class="frame-card flex flex-col items-center p-3 border-2 border-stone-200 rounded-2xl cursor-pointer hover:border-stone-400 transition-all">
-                        <input type="radio" name="template" value="black" onchange="selectColorTemplate('black', this)" class="hidden">
-                        <div class="w-full aspect-[1/2] max-h-24 bg-stone-900 border border-stone-700 rounded-lg mb-2 shadow-sm flex items-center justify-center">
-                            <span class="text-[10px] text-stone-300 font-serif">Hitam</span>
-                        </div>
-                        <span class="text-xs font-semibold text-stone-700">Matte Black</span>
-                    </label>
-
-                    <label class="frame-card flex flex-col items-center p-3 border-2 border-stone-200 rounded-2xl cursor-pointer hover:border-stone-400 transition-all">
-                        <input type="radio" name="template" value="cream" onchange="selectColorTemplate('cream', this)" class="hidden">
-                        <div class="w-full aspect-[1/2] max-h-24 bg-[#F5EBE6] border border-stone-300 rounded-lg mb-2 shadow-sm flex items-center justify-center">
-                            <span class="text-[10px] text-stone-500 font-serif">Cream</span>
-                        </div>
-                        <span class="text-xs font-semibold text-stone-700">Pastel Cream</span>
-                    </label>
-                </div>
-
-                <button id="btn-start-shoot" onclick="startPhotoSession()" class="w-full mt-6 py-4 bg-brand-primary text-white rounded-2xl font-medium tracking-wide shadow-lg hover:bg-black transition-all text-sm uppercase">
-                    MULAI FOTO SESI
+                <button id="btn-start-shoot" onclick="startPhotoSession()" class="w-full py-4 bg-brand-primary text-white rounded-xl font-medium tracking-wide shadow-md hover:bg-black transition-all text-sm">
+                    Mulai Sesi Foto
                 </button>
             </div>
         </div>
 
-        <!-- SCREEN 2: RETAKE HASIL SESI PER KOTAK -->
-        <div id="screen-edit" class="hidden w-full max-w-4xl flex flex-col items-center">
-            <div class="w-full bg-white p-6 rounded-3xl shadow-sm border border-stone-200 flex flex-col items-center">
+        <!-- SCREEN 2: PREVIEW & RETAKE HASIL SESI -->
+        <div id="screen-edit" class="hidden w-full max-w-3xl flex flex-col items-center">
+            <div class="w-full bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col items-center">
                 <div class="mb-4 flex justify-between items-center w-full max-w-md text-xs text-stone-500 font-medium">
-                    <h2 class="text-lg font-serif font-bold text-stone-800">Hasil Sesi Foto</h2>
-                    <span id="retake-timer-text" class="text-amber-600 font-semibold bg-amber-50 px-3 py-1 rounded-full border border-amber-200">Waktu: 60s</span>
+                    <h2 class="text-lg font-serif font-bold text-stone-800">Hasil Foto Sesi</h2>
+                    <span id="retake-timer-text" class="text-amber-600 font-semibold bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">Waktu: 60s</span>
                 </div>
                 
                 <div id="individual-photos-grid" class="grid grid-cols-2 gap-3 bg-stone-50 p-4 rounded-2xl border border-stone-200 shadow-inner max-w-md w-full mb-6"></div>
 
-                <div class="w-full max-w-md">
-                    <button onclick="proceedToFinish()" class="w-full py-4 bg-brand-primary text-white rounded-2xl font-medium shadow-md hover:bg-black transition-all text-sm tracking-wide">
-                        Lanjutkan ke Cetak & Preview →
-                    </button>
-                </div>
+                <button onclick="proceedToFinish()" class="w-full max-w-md py-4 bg-brand-primary text-white rounded-xl font-medium shadow-md hover:bg-black transition-all tracking-wide text-sm">
+                    Lanjutkan ke Preview & Cetak →
+                </button>
             </div>
         </div>
 
-        <!-- SCREEN 3: PREVIEW HASIL + FEATURE DOWNLOAD (FOTO, GIF, STRIP) -->
-        <div id="screen-finish" class="hidden w-full max-w-5xl flex flex-col md:flex-row items-center gap-8">
-            <!-- Left: Final Strip Image Preview -->
-            <div class="flex-1 flex flex-col items-center">
-                <div class="p-2 bg-stone-800/10 rounded-2xl border border-stone-200 shadow-2xl relative mb-3">
+        <!-- SCREEN 3: FINISH (PREVIEW CETAK, FILTER, CUSTOM KALIMAT, DOWNLOAD FOTO & GIF) -->
+        <div id="screen-finish" class="hidden w-full max-w-5xl flex flex-col md:flex-row items-start gap-8">
+            <!-- Left: Final Strip Canvas Preview -->
+            <div class="flex-1 flex flex-col items-center w-full">
+                <div class="p-2 bg-stone-800/10 rounded-2xl border border-stone-200 shadow-xl relative mb-3">
                     <canvas id="final-strip-canvas" class="max-h-[65vh] w-auto rounded"></canvas>
-                </div>
-                
-                <div class="bg-white p-3 rounded-2xl border border-stone-200 shadow-sm w-full max-w-xs text-center">
-                    <label class="block text-[11px] font-semibold text-stone-600 mb-1.5">Pilih Filter Warna Cetak:</label>
-                    <div class="grid grid-cols-4 gap-1">
-                        <button onclick="applyFilter('normal')" class="py-1.5 border border-stone-200 rounded-lg text-[10px] font-medium hover:border-stone-800 focus:bg-stone-100">Normal</button>
-                        <button onclick="applyFilter('bw')" class="py-1.5 border border-stone-200 rounded-lg text-[10px] font-medium hover:border-stone-800 focus:bg-stone-100">B&W</button>
-                        <button onclick="applyFilter('warm')" class="py-1.5 border border-stone-200 rounded-lg text-[10px] font-medium hover:border-stone-800 focus:bg-stone-100">Warm</button>
-                        <button onclick="applyFilter('vintage')" class="py-1.5 border border-stone-200 rounded-lg text-[10px] font-medium hover:border-stone-800 focus:bg-stone-100">Vintage</button>
-                    </div>
                 </div>
             </div>
 
-            <!-- Right: Action Panel (Download + Barcode + Email) -->
-            <div class="w-full md:w-96 bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-stone-200 flex flex-col items-center text-center space-y-4">
+            <!-- Right: Panel Kontrol & Download -->
+            <div class="w-full md:w-96 bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col space-y-4">
                 <div>
-                    <h2 class="text-2xl font-serif font-bold text-stone-800 mb-1">Selesai!</h2>
-                    <p class="text-stone-500 text-xs">Unduh hasil fotomu secara langsung atau kirim ke email.</p>
+                    <h2 class="text-xl font-serif font-bold text-stone-800 mb-1">Hasil Foto Strip</h2>
+                    <p class="text-stone-500 text-xs">Atur teks, warna filter, atau unduh berkas digital.</p>
                 </div>
 
-                <!-- Action Download Options -->
-                <div class="w-full space-y-2">
-                    <button onclick="downloadPhotoStrip()" class="w-full py-3 bg-stone-800 text-white rounded-xl text-xs font-semibold hover:bg-black transition-all flex items-center justify-center gap-2 shadow-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                        <span>Download Foto Strip (PNG)</span>
-                    </button>
-
-                    <button onclick="downloadGIF()" id="btn-download-gif" class="w-full py-3 bg-amber-600 text-white rounded-xl text-xs font-semibold hover:bg-amber-700 transition-all flex items-center justify-center gap-2 shadow-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                        <span>Download Animasi GIF</span>
-                    </button>
+                <!-- Custom Kalimat Header -->
+                <div>
+                    <label class="block text-xs font-semibold text-stone-700 mb-1">Custom Kalimat / Nama Header:</label>
+                    <input type="text" id="custom-name-input" placeholder="Tulis kalimat/nama di sini..." oninput="renderStrip()" class="w-full p-2.5 border border-stone-300 rounded-xl text-xs outline-none focus:ring-1 focus:ring-stone-800"/>
                 </div>
 
-                <!-- Instant QR Code Box -->
-                <div class="p-3 bg-stone-50 border border-stone-200 rounded-2xl flex flex-col items-center w-full">
-                    <div id="qrcode-box" class="w-36 h-36 bg-white p-2 rounded-xl flex items-center justify-center shadow-inner">
-                        <span id="qr-loading" class="text-xs text-stone-400 animate-pulse">Membuat QR...</span>
+                <!-- Opsi Filter Warna -->
+                <div>
+                    <label class="block text-xs font-semibold text-stone-700 mb-1.5">Pilih Filter Warna Foto:</label>
+                    <div class="grid grid-cols-4 gap-1.5">
+                        <button onclick="applyFilter('normal')" class="py-2 border border-stone-200 rounded-lg text-xs font-medium hover:border-stone-800 focus:bg-stone-100">Normal</button>
+                        <button onclick="applyFilter('bw')" class="py-2 border border-stone-200 rounded-lg text-xs font-medium hover:border-stone-800 focus:bg-stone-100">B&W</button>
+                        <button onclick="applyFilter('warm')" class="py-2 border border-stone-200 rounded-lg text-xs font-medium hover:border-stone-800 focus:bg-stone-100">Warm</button>
+                        <button onclick="applyFilter('vintage')" class="py-2 border border-stone-200 rounded-lg text-xs font-medium hover:border-stone-800 focus:bg-stone-100">Vintage</button>
                     </div>
-                    <span class="text-[10px] text-stone-400 font-medium mt-1">Scan QR via Kamera HP</span>
                 </div>
 
-                <!-- Form Kirim Email Otomatis -->
-                <div class="w-full pt-2 border-t border-stone-100 text-left">
-                    <label class="block text-xs font-semibold text-stone-700 mb-1">Kirim ke Email Pengunjung</label>
-                    <div class="flex gap-2 mb-2">
-                        <input type="email" id="customer-email" placeholder="masukkan.email@gmail.com" class="flex-1 p-2.5 border border-stone-300 rounded-xl text-xs outline-none focus:ring-1 focus:ring-stone-800"/>
-                        <button onclick="sendEmailBackup()" id="btn-send-email" class="px-4 bg-stone-800 text-white text-xs font-medium rounded-xl hover:bg-black transition-all">
-                            Kirim
+                <!-- Fitur Download & Print Canon CP1500 -->
+                <div class="space-y-2 pt-2 border-t border-stone-100">
+                    <button onclick="printForCanonCP1500()" class="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-xs rounded-xl transition-all shadow flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                        <span>Cetak (Canon SELPHY CP1500)</span>
+                    </button>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="downloadFotoStrip()" class="py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-800 font-medium text-xs rounded-xl transition-all border border-stone-300">
+                            Unduh Foto Strip
+                        </button>
+                        <button onclick="downloadGIF()" id="btn-download-gif" class="py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-800 font-medium text-xs rounded-xl transition-all border border-stone-300">
+                            Unduh GIF
                         </button>
                     </div>
-                    <span id="email-status-text" class="text-[10px] text-emerald-600 hidden block">✓ Email terkirim!</span>
                 </div>
 
-                <button onclick="resetApp()" class="w-full py-3 bg-brand-primary hover:bg-black text-white font-medium text-xs rounded-xl tracking-wider uppercase transition-all shadow-md">
-                    SELESAI
+                <button onclick="resetApp()" class="w-full py-3 bg-brand-primary hover:bg-black text-white font-medium text-xs rounded-xl tracking-wider uppercase transition-all">
+                    SELESAI SESI
                 </button>
             </div>
         </div>
@@ -388,7 +360,7 @@
         function saveAdminFrameConfig() {
             const img = document.getElementById('editor-frame-img');
             if(!img.src) {
-                alert("Pengaturan admin disimpan!");
+                alert("Pengaturan disimpan!");
                 toggleAdminModal();
                 return;
             }
@@ -413,21 +385,14 @@
                 const templateId = `custom-${customTemplateCounter++}`;
                 const container = document.getElementById('template-options');
                 
-                const label = document.createElement('label');
-                label.className = "frame-card flex flex-col items-center p-3 border-2 border-stone-200 rounded-2xl cursor-pointer hover:border-stone-400 transition-all";
-                label.innerHTML = `
-                    <input type="radio" name="template" value="${templateId}" class="hidden">
-                    <div class="w-full aspect-[1/2] max-h-24 overflow-hidden rounded-lg mb-2 shadow-sm border border-stone-200">
-                        <img src="${img.src}" class="w-full h-full object-cover"/>
-                    </div>
+                const btn = document.createElement('button');
+                btn.onclick = () => { customFrameImage = frameImg; };
+                btn.className = "template-btn p-3 border-2 border-stone-200 rounded-xl flex items-center space-x-3 transition-all";
+                btn.innerHTML = `
+                    <img src="${img.src}" class="w-5 h-7 object-cover border border-stone-300 rounded shadow-sm"/>
                     <span class="text-xs font-semibold text-stone-700">Custom Frame #${customTemplateCounter - 1}</span>
                 `;
-                container.appendChild(label);
-                
-                const radio = label.querySelector('input');
-                radio.addEventListener('change', () => {
-                    selectCustomTemplate(frameImg, label);
-                });
+                container.appendChild(btn);
 
                 alert("Frame Custom Berhasil Disimpan!");
                 toggleAdminModal();
@@ -437,32 +402,16 @@
 
         function selectColorTemplate(type, elem) {
             customFrameImage = null;
-            targetGridCount = 4;
-            document.getElementById('frame-pose-info').innerText = `${targetGridCount} Pose Photo`;
-
-            document.querySelectorAll('.frame-card').forEach(card => {
-                card.classList.remove('border-brand-primary', 'bg-stone-50');
-                card.classList.add('border-stone-200');
-            });
-            elem.closest('.frame-card').classList.remove('border-stone-200');
-            elem.closest('.frame-card').classList.add('border-brand-primary', 'bg-stone-50');
-
             if (type === 'white') selectedTemplateColor = '#FFFFFF';
             if (type === 'black') selectedTemplateColor = '#111111';
             if (type === 'cream') selectedTemplateColor = '#F5EBE6';
-        }
 
-        function selectCustomTemplate(frameImg, labelElem) {
-            customFrameImage = frameImg;
-            targetGridCount = customBoxCoords.length;
-            document.getElementById('frame-pose-info').innerText = `${targetGridCount} Pose Photo`;
-
-            document.querySelectorAll('.frame-card').forEach(card => {
-                card.classList.remove('border-brand-primary', 'bg-stone-50');
-                card.classList.add('border-stone-200');
+            document.querySelectorAll('.template-btn').forEach(b => {
+                b.classList.remove('border-brand-primary', 'bg-stone-50');
+                b.classList.add('border-stone-200');
             });
-            labelElem.classList.remove('border-stone-200');
-            labelElem.classList.add('border-brand-primary', 'bg-stone-50');
+            elem.classList.remove('border-stone-200');
+            elem.classList.add('border-brand-primary', 'bg-stone-50');
         }
 
         async function startPhotoSession() {
@@ -633,9 +582,20 @@
             finalCanvas.width = stripWidth;
             finalCanvas.height = stripHeight;
 
+            // Background Warna
             ctx.fillStyle = selectedTemplateColor;
             ctx.fillRect(0, 0, stripWidth, stripHeight);
 
+            // Teks Kalimat Custom Header
+            const customName = document.getElementById('custom-name-input').value.trim();
+            if (customName) {
+                ctx.fillStyle = selectedTemplateColor === '#FFFFFF' || selectedTemplateColor === '#F5EBE6' ? '#2C2A29' : '#FFFFFF';
+                ctx.font = 'italic 22px Playfair Display';
+                ctx.textAlign = 'center';
+                ctx.fillText(customName, stripWidth / 2, 60);
+            }
+
+            // Render Foto-Foto
             let loadedCount = 0;
             capturedPhotos.forEach((src, idx) => {
                 const img = new Image();
@@ -673,105 +633,74 @@
             ctx.fillText(today, w / 2, h - 30);
         }
 
-        async function proceedToFinish() {
+        function proceedToFinish() {
             clearInterval(retakeTimer);
             document.getElementById('screen-edit').classList.add('hidden');
             document.getElementById('screen-finish').classList.remove('hidden');
-
             renderStrip();
-
-            setTimeout(() => {
-                const finalImageSrc = finalCanvas.toDataURL('image/jpeg', 0.85);
-
-                const autoPrint = document.getElementById('auto-print-setting').value;
-                if (autoPrint === 'true') {
-                    document.getElementById('print-image-target').src = finalImageSrc;
-                    setTimeout(() => { window.print(); }, 300);
-                }
-
-                const qrContainer = document.getElementById('qrcode-box');
-                qrContainer.innerHTML = '';
-                new QRCode(qrContainer, {
-                    text: finalImageSrc,
-                    width: 140,
-                    height: 140,
-                    colorDark: "#2C2A29",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.L
-                });
-            }, 600);
         }
 
-        // Fitur Download Foto Strip PNG
-        function downloadPhotoStrip() {
+        function downloadFotoStrip() {
             const link = document.createElement('a');
-            link.download = `Ruang-Bersua-Strip-${Date.now()}.png`;
+            link.download = `RuangBersua_Photostrip_${Date.now()}.png`;
             link.href = finalCanvas.toDataURL('image/png');
             link.click();
         }
 
-        // Fitur Download Animasi GIF
         function downloadGIF() {
             const btn = document.getElementById('btn-download-gif');
-            btn.innerText = "Memproses GIF...";
+            btn.innerText = "Membuat GIF...";
             btn.disabled = true;
 
-            gifshot.createGIF({
-                images: capturedPhotos,
-                interval: 0.5,
-                gifWidth: 400,
-                gifHeight: 300
-            }, function (obj) {
-                if (!obj.error) {
-                    const link = document.createElement('a');
-                    link.download = `Ruang-Bersua-Animation-${Date.now()}.gif`;
-                    link.href = obj.image;
-                    link.click();
-                } else {
-                    alert("Gagal membuat animasi GIF.");
-                }
-                btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg><span>Download Animasi GIF</span>`;
-                btn.disabled = false;
+            const gif = new GIF({
+                workers: 2,
+                quality: 10,
+                width: 400,
+                height: 300
+            });
+
+            let loaded = 0;
+            capturedPhotos.forEach(src => {
+                const img = new Image();
+                img.onload = () => {
+                    const c = document.createElement('canvas');
+                    c.width = 400;
+                    c.height = 300;
+                    const ctx = c.getContext('2d');
+                    ctx.drawImage(img, 0, 0, 400, 300);
+                    applyCanvasPixelFilter(ctx, 400, 300, selectedFilter);
+                    gif.addFrame(ctx, {copy: true, delay: 500});
+                    loaded++;
+
+                    if(loaded === capturedPhotos.length) {
+                        gif.on('finished', function(blob) {
+                            const link = document.createElement('a');
+                            link.download = `RuangBersua_Animation_${Date.now()}.gif`;
+                            link.href = URL.createObjectURL(blob);
+                            link.click();
+                            btn.innerText = "Unduh GIF";
+                            btn.disabled = false;
+                        });
+                        gif.render();
+                    }
+                };
+                img.src = src;
             });
         }
 
-        function sendEmailBackup() {
-            const email = document.getElementById('customer-email').value.trim();
-            if(!email) {
-                alert("Masukkan alamat email.");
-                return;
-            }
-
-            const statusText = document.getElementById('email-status-text');
-            const btnSend = document.getElementById('btn-send-email');
-            
-            btnSend.disabled = true;
-            statusText.classList.remove('hidden');
-            statusText.innerText = "Mengirim dari piopio112402@gmail.com...";
-
-            const emailParams = {
-                to_email: email,
-                from_email: "piopio112402@gmail.com",
-                photo_strip_url: finalCanvas.toDataURL('image/png'),
-                message: "Terima kasih telah berfoto di Ruang Bersua Studio! Berikut salinan hasil foto strip kamu."
-            };
-
-            emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", emailParams)
-                .then(() => {
-                    statusText.innerText = `✓ Foto dikirim ke ${email}`;
-                    btnSend.disabled = false;
-                }, (error) => {
-                    statusText.innerText = `✓ Foto dikirim ke ${email}`;
-                    btnSend.disabled = false;
-                });
+        function printForCanonCP1500() {
+            const printTarget = document.getElementById('print-image-target');
+            printTarget.src = finalCanvas.toDataURL('image/png');
+            setTimeout(() => {
+                window.print();
+            }, 300);
         }
 
         function resetApp() {
             document.getElementById('screen-finish').classList.add('hidden');
             document.getElementById('screen-welcome').classList.remove('hidden');
             document.getElementById('btn-start-shoot').disabled = false;
-            document.getElementById('email-status-text').classList.add('hidden');
-            document.getElementById('qrcode-box').innerHTML = '<span id="qr-loading" class="text-xs text-stone-400 animate-pulse">Membuat QR...</span>';
+            document.getElementById('custom-name-input').value = '';
         }
     </script>
 </body>
